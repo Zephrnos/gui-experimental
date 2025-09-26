@@ -1,0 +1,14 @@
+<html>
+
+    <button onclick="getUser()">GET USER</button>
+
+    <script>
+        const invoke = window.__TAURI__.invoke;
+
+        async function getUser() {
+            await invoke("get_user");
+        }
+
+    </script>
+
+</html>
