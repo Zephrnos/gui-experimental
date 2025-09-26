@@ -1,14 +1,19 @@
 <html>
-
-    <button onclick="getUser()">GET USER</button>
+  <body>
+    <button id="my-button">Invoke Command</button>
 
     <script>
-        const invoke = window.__TAURI__.invoke;
+      // 1. Get the invoke function from the global Tauri object
+      const invoke = window.__TAURI__.core.invoke;
 
-        async function getUser() {
-            await invoke("get_user");
-        }
+      // 2. Create a function to call the command
+      async function callCustomCommand() {
+        // 3. Use the invoke function to call your Rust command
+        await invoke('my_custom_command');
+      }
 
+      // 4. Add an event listener to your button
+      document.getElementById('my-button').addEventListener('click', callCustomCommand);
     </script>
-
+  </body>
 </html>
