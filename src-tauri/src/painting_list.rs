@@ -1,5 +1,9 @@
+use crate::painting::Painting;
+use serde::{Deserialize, Serialize};
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct PaintingList {
+    #[serde(rename = "$schema")]
     pub schema: String,
     pub version: String, 
     pub id: String, 
@@ -7,6 +11,58 @@ pub struct PaintingList {
     pub paintings: vec![Painting],
 }
 
-impl PaintingList {
-    
+impl Default for PaintingList {
+    fn default() -> Self {
+        PaintingList {
+            schema: String::from("http://json-schema.org/draft-07/schema#"),
+            version: String::from("1.0.0"),
+            id: String::from("http://example.com/paintinglist.json"),
+            description: String::from("A list of paintings in the gallery"),
+            paintings: vec![],
+        }
+    }
+}
+
+pub impl PaintingList {
+
+    fn check_no_input(input: String) -> Option<String> {
+        if input.trim().is_empty() {
+            None
+        } else {
+            Some(input)
+        }
+    }
+
+    pub fn set_schema(&mut self, schema: String) {
+        match check_no_input(schema) {
+            Some(valid_schema) => self.schema = valid_schema,
+            None => {},
+        }
+    }
+
+    pub fn set_version(&mut self, version: String) {
+        match check_no_input(version) {
+            Some(valid_version) => self.version = valid_version,
+            None => {},
+        }
+    }
+
+    pub fn set_id(&mut self, id: String) {
+        match check_no_input(id) {
+            Some(valid_id) => self.id = valid_id,
+            None => {},
+        }
+    }
+
+    pub fn set_description(&mut self, description: String) {
+        match check_no_input(description) {
+            Some(valid_description) => self.description = valid_description,
+            None => {},
+        }
+    }
+
+    pub fn add_painting(&mut self, painting: Painting) {
+        self.paintings.push(painting);
+    }
+
 }
