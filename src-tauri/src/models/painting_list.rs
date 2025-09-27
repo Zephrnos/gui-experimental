@@ -8,7 +8,7 @@ pub struct PaintingList {
     pub version: String, 
     pub id: String, 
     pub description: String,
-    pub paintings: Vec<Painting>,
+    paintings: Vec<Painting>,
 }
 
 impl Default for PaintingList {
@@ -69,6 +69,10 @@ impl PaintingList {
         for painting in paintings {
             self.paintings.push(painting);
         }
+    }
+
+    pub fn retrieve_paintings(&self) -> &Vec<Painting> {
+        &self.paintings
     }
 
     pub fn new(paintings: Vec<Painting>) -> Self {

@@ -1,17 +1,13 @@
 use std::fs::{create_dir_all, write};
-use serde::{Serialize};
 
 use crate::models::painting_list::PaintingList;
-use crate::models::painting::Painting;
 
 // Load in the default icon to bianary so the file is contained in the executable
 const DEFAULT_ICON: &[u8] = include_bytes!("../../assets/icon.png");
 
-pub fn export(paintings: Vec<Painting>, export_path: String) {
+pub fn export(paintings_list: PaintingList, export_path: String) {
 
-    let painting_list = PaintingList::new(paintings);
-
-    let json_data = serde_json::to_string_pretty(&painting_list).expect("Failed to serialize painting list");
+    let json_data = serde_json::to_string_pretty(&paintings_list).expect("Failed to serialize painting list");
 
     create_dir_all(format!("{}/images", &export_path)).expect("Failed to create images directory");
 

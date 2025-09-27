@@ -5,67 +5,56 @@ use serde::Serialize;
 #[derive(Serialize, Debug)]
 pub struct Painting {
     #[serde(skip_serializing)]
-    pub painting: DynamicImage,
-    pub id: String,
-    pub filename: String,
-    pub title: String,
-    pub artist: String,
-    pub width: u32,
-    pub height: u32,
+    painting: DynamicImage,
+    pub id: Option<String>,
+    pub filename: Option<String>,
+    pub title: Option<String>,
+    pub artist: Option<String>,
+    width: u32,
+    height: u32,
 }
 
 impl Painting {
 
-    fn set_id(&mut self, id: String) {
-        self.id = id;
-    }
-
-    fn set_filename(&mut self, filename: String) {
-        self.filename = filename;
-    }
-
-    pub fn set_title(&mut self, title: String) {
-        self.title = title;
-    }
-
-    pub fn set_artist(&mut self, artist: String) {
-        self.artist = artist;
-    }
-
-    pub fn new_from_cropped_image(
-        painting: DynamicImage,
-        width: u32, 
-        height: u32        
-    ) -> Self {
-        Painting {
-            painting,
-            id: String::new(),
-            filename: String::new(),
-            title: String::new(),
-            artist: String::new(),
-            width,
-            height
-        }
-    }
-
     pub fn new(
-        painting: DynamicImage,
-        id: String, 
-        filename: String, 
-        title: String, 
-        artist: String, 
+        painting: DynamicImage, 
         width: u32, 
         height: u32
     ) -> Self {
         Painting {
             painting,
-            id,
-            filename,
-            title,
-            artist,
+            id: None,
+            filename: None,
+            title: None,
+            artist: None,
             width,
             height,
         }
+    }
+
+    pub fn id(mut self, id: String) -> Self {
+        self.id = Some(id);
+        self
+    }
+
+    pub fn filename(mut self, filename: String) -> Self {
+        self.filename = Some(filename);
+        self
+    }
+
+    pub fn title(mut self, title: String) -> Self {
+        self.title = Some(title);
+        self
+    }
+
+    pub fn artist(mut self, artist: String) -> Self {
+        self.artist = Some(artist);
+        self
+    }
+
+
+    fn get_painting(&self) -> &DynamicImage {
+        &self.painting
     }
 
 }
