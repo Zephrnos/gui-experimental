@@ -1,5 +1,5 @@
-use std::fs::{create_dir_all, write, self};
-use serde::{Deserialize, Serialize};
+use std::fs::{create_dir_all, write};
+use serde::{Serialize};
 
 use crate::models::painting_list::PaintingList;
 use crate::models::painting::Painting;

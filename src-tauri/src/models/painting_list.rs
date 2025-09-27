@@ -1,7 +1,7 @@
 use crate::models::painting::Painting;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Debug)]
 pub struct PaintingList {
     #[serde(rename = "$schema")]
     pub schema: String,
@@ -61,8 +61,14 @@ impl PaintingList {
         }
     }
 
-    pub fn add_paintings(&mut self, painting: Painting) {
+    pub fn add_painting(&mut self, painting: Painting) {
         self.paintings.push(painting);
+    }
+
+    pub fn add_many_paintings(&mut self, paintings: Vec<Painting>) {
+        for painting in paintings {
+            self.paintings.push(painting);
+        }
     }
 
     pub fn new(paintings: Vec<Painting>) -> Self {
