@@ -33,8 +33,6 @@ fn check_no_input(input: String) -> Option<String> {
 
 impl PaintingList {
 
-
-
     pub fn set_schema(&mut self, schema: String) {
         match check_no_input(schema) {
             Some(valid_schema) => self.schema = valid_schema,
@@ -63,13 +61,18 @@ impl PaintingList {
         }
     }
 
-    pub fn add_painting(&mut self, painting: Painting) {
+    pub fn add_paintings(&mut self, painting: Painting) {
         self.paintings.push(painting);
     }
 
-    pub fn serialize_to_json(image_data: PaintingList) {
-        todo!()
+    pub fn new(paintings: Vec<Painting>) -> Self {
+        PaintingList {
+            schema: String::from("http://json-schema.org/draft-07/schema#"),
+            version: String::from("1.0.0"),
+            id: String::from("http://example.com/paintinglist.json"),
+            description: String::from("A list of paintings in the gallery"),
+            paintings: paintings,
+        }
     }
-
 
 }

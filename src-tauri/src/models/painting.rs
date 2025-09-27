@@ -8,7 +8,8 @@ pub struct Painting {
     pub filename: String,
     pub title: String,
     pub artist: String,
-    pub painting_size: PaintingSize,
+    pub width: u32,
+    pub height: u32,
 }
 
 impl Painting {
