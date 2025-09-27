@@ -56,16 +56,16 @@ impl Painting {
         artist: String, 
         width: u32, 
         height: u32
-        ) -> Self {
-            Painting {
-                painting,
-                id,
-                filename,
-                title,
-                artist,
-                width,
-                height,
-            }
+    ) -> Self {
+        Painting {
+            painting,
+            id,
+            filename,
+            title,
+            artist,
+            width,
+            height,
+        }
     }
 
 }
