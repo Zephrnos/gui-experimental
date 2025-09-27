@@ -1,7 +1,7 @@
-pub mod painting_list;
-pub mod painting;
-pub mod painting_size;
-pub mod cropper;
+pub mod models;
+pub mod core;
+pub mod commands;
+pub mod state; 
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {

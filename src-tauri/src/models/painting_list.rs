@@ -1,4 +1,4 @@
-use crate::painting::Painting;
+use crate::models::painting::Painting;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -66,5 +66,10 @@ impl PaintingList {
     pub fn add_painting(&mut self, painting: Painting) {
         self.paintings.push(painting);
     }
+
+    pub fn serialize_to_json(image_data: PaintingList) {
+        todo!()
+    }
+
 
 }

@@ -1,5 +1,5 @@
 // src/painting.rs
-use crate::painting_size::PaintingSize;
+use crate::models::painting_size::PaintingSize;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
