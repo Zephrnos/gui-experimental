@@ -17,8 +17,20 @@ impl Painting {
         todo!()
     }
 
+    fn set_id(&mut self, id: String) {
+        self.id = id;
+    }
+
+    pub fn set_title(&mut self, title: String) {
+        self.title = title;
+    }
+
+    pub fn set_artist(&mut self, artist: String) {
+        self.artist = artist;
+    }
     pub fn new(input: String, size: PaintingSize) -> Self {
         todo!()
     }
+
 
 }

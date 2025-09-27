@@ -10,6 +10,9 @@ fn serialize_to_json(image_data: PaintingList) {
   todo!()
 }
 
+// Load in the default icon to bianary so the file is contained in the executable
+const DEFAULT_ICON: &[u8] = include_bytes!("../assets/icon.png");
+
 fn main() {
   app_lib::run();
 
