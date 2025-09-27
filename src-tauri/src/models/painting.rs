@@ -52,8 +52,12 @@ impl Painting {
         self
     }
 
+    pub fn get_filename(&self) -> &String {
+        let to_write = self.filename.as_ref().unwrap();
+        to_write
+    }
 
-    fn get_painting(&self) -> &DynamicImage {
+    pub fn get_painting(&self) -> &DynamicImage {
         &self.painting
     }
 
