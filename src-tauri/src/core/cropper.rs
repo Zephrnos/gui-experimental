@@ -13,12 +13,13 @@ pub fn crop_image(image: &mut DynamicImage, size_config: PaintingSize) -> Vec<Pa
 
     // 3. Generate a Painting for each required size from the now-cropped image.
     let mut paintings: Vec<Painting> = Vec::new();
-    for (width, height) in dimensions_list {
+    for (width, height) in dimensions_list {    
         let new_painting = Painting::new(cropped_base_image.clone(), width, height);
         paintings.push(new_painting);
     }
 
     paintings
+    
 }
 
 // The complex logic is isolated in its own function.
