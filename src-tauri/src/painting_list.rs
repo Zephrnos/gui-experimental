@@ -8,7 +8,7 @@ pub struct PaintingList {
     pub version: String, 
     pub id: String, 
     pub description: String,
-    pub paintings: vec![Painting],
+    pub paintings: Vec<Painting>,
 }
 
 impl Default for PaintingList {
@@ -23,15 +23,17 @@ impl Default for PaintingList {
     }
 }
 
-pub impl PaintingList {
-
-    fn check_no_input(input: String) -> Option<String> {
-        if input.trim().is_empty() {
-            None
-        } else {
-            Some(input)
-        }
+fn check_no_input(input: String) -> Option<String> {
+    if input.trim().is_empty() {
+        None
+    } else {
+         Some(input)
     }
+}
+
+impl PaintingList {
+
+
 
     pub fn set_schema(&mut self, schema: String) {
         match check_no_input(schema) {

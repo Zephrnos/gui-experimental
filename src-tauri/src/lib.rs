@@ -1,3 +1,8 @@
+pub mod painting_list;
+pub mod painting;
+pub mod painting_size;
+pub mod cropper;
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
