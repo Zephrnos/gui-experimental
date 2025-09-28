@@ -1,29 +1,25 @@
 // src/Image_Data.rs
 use image::DynamicImage;
-use serde::Serialize;
-
 use crate::models::image_size::{ImageSize};
+
 
 #[derive(Debug)]
 pub struct ImageData {
-    image: DynamicImage,
-    pub id: Option<String>,
-    pub filename: Option<String>,
-    pub title: Option<String>,
-    pub artist: Option<String>,
-    image_size: ImageSize,
+    image:          DynamicImage,
+    pub id:         Option<String>,
+    pub filename:   Option<String>,
+    pub name:       Option<String>,
+    pub artist:     Option<String>,
+    image_size:     ImageSize,
 }
 
-impl Serialize for ImageData {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer, 
-    {
-        
-        let mut state = serializer.serialize_struct("Image_Data", 6)?;
-        todo!()
-
-    }
+struct Painting {
+    id:         String,
+    filename:   String,
+    name:       String,
+    artist:     String,
+    width:      u32,
+    height:     u32
 }
 
 impl ImageData {
@@ -34,10 +30,10 @@ impl ImageData {
     ) -> Self {
         ImageData {
             image,
-            id: None,
-            filename: None,
-            title: None,
-            artist: None,
+            id:         None,
+            filename:   None,
+            name:      None,
+            artist:     None,
             image_size,
         }
     }
@@ -52,8 +48,8 @@ impl ImageData {
         self
     }
 
-    pub fn title(mut self, title: String) -> Self {
-        self.title = Some(title);
+    pub fn name(mut self, name: String) -> Self {
+        self.name = Some(name);
         self
     }
 
@@ -69,6 +65,16 @@ impl ImageData {
 
     pub fn get_image(&self) -> &DynamicImage {
         &self.image
+    }
+
+    pub fn to_paintings(&mut self) -> Vec<Painting> {
+        let paintings: Vec<Painting> = Vec::new();
+        for size in self.image_size.get_size() {
+            todo!()
+        }
+
+        paintings
+
     }
 
 }

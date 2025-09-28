@@ -1,19 +1,16 @@
-use crate::models::image_data::ImageData;
-use serde::Serialize;
-
-#[derive(Serialize, Debug)]
-pub struct PaintingList {
-    #[serde(rename = "$schema")]
+#[derive(Debug)]
+pub struct PaintingList<T> {
+    // #[serde(rename = "$schema")]
     pub schema: String,
     pub version: String, 
     pub id: String, 
     pub description: String,
-    #[serde(skip)]
+    // #[serde(skip)]
     to_write: Vec<bool>,
-    paintings: Vec<ImageData>,
+    paintings: Vec<T>,
 }
 
-impl Default for PaintingList {
+impl<T> Default for PaintingList<T> {
     fn default() -> Self {
         PaintingList {
             schema: String::from("http://json-schema.org/draft-07/schema#"),
@@ -34,7 +31,7 @@ fn check_no_input(input: String) -> Option<String> {
     }
 }
 
-impl PaintingList {
+impl<T> PaintingList<T> {
 
     pub fn set_schema(&mut self, schema: String) {
         match check_no_input(schema) {
@@ -64,17 +61,17 @@ impl PaintingList {
         }
     }
 
-    pub fn add_painting(&mut self, painting: ImageData) {
+    pub fn add_painting(&mut self, painting: T) {
         self.paintings.push(painting);
     }
 
-    pub fn add_many_paintings(&mut self, paintings: Vec<ImageData>) {
+    pub fn add_many_paintings(&mut self, paintings: Vec<T>) {
         for painting in paintings {
             self.paintings.push(painting);
         }
     }
 
-    pub fn retrieve_paintings(&self) -> &Vec<ImageData> {
+    pub fn retrieve_paintings(&self) -> &Vec<T> {
         &self.paintings
     }
 
