@@ -16,8 +16,8 @@ pub fn crop_preview(path: String) -> Vec<ImageData> {
         
         let crop_preview = img.clone().crop_imm(width_start, height_start, crop_width, crop_height);
         
-        let new_ImageData = ImageData::new(crop_preview, *size_variant);
-        previews.push(new_ImageData);
+        let new_image_data = ImageData::new(crop_preview, *size_variant);
+        previews.push(new_image_data);
 
     }
 
