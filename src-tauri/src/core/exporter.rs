@@ -28,32 +28,36 @@ fn write_json (painting_list: &PaintingList<Painting>, export_path: &String) {
 }
 
 fn write_images(painting_list: &mut PaintingList<Painting>, image_list: Vec<ImageData>, export_path: &String) {
+
+    let mut index: usize = 0;
     
     for image in image_list {
 
-        let painting: DynamicImage = image.get_image().clone();
+        if painting_list.writable[index] {
 
-        for (width, height) in image.get_sizes() {
+            let painting: DynamicImage = image.get_image().clone();
 
-            let id: String = format!("{}_{}x{}", image.id.clone().unwrap(), &width, &height);
-            let filename: String = format!("{}_{}x{}", image.filename.clone().unwrap(), &width, &height);
-            painting.save(format!("{}/{}.png", export_path, &filename)).expect("This shouldnt fail");
+            for (width, height) in image.get_sizes() {
 
-            let painting: Painting = Painting {
-                id,
-                filename,
-                name: image.name.clone().unwrap(),
-                artist: image.artist.clone().unwrap(), 
-                width: *width, 
-                height: *height, 
+                let id: String = format!("{}_{}x{}", image.id.clone().unwrap(), &width, &height);
+                let filename: String = format!("{}_{}x{}", image.filename.clone().unwrap(), &width, &height);
+                painting.save(format!("{}/{}.png", export_path, &filename)).expect("This shouldnt fail");
+
+                let painting: Painting = Painting {
+                    id,
+                    filename,
+                    name: image.name.clone().unwrap(),
+                    artist: image.artist.clone().unwrap(), 
+                    width: *width, 
+                    height: *height, 
+                };
+
+            painting_list.add_painting(painting);
+                
             };
-
-        painting_list.add_painting(painting);
-            
-        };
-
+        }
+        index += 1;
     }
-
 }
 
 pub fn export(image_list: PaintingList<ImageData>, export_path: String) {

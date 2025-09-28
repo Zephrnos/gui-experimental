@@ -7,9 +7,9 @@
       const invoke = window.__TAURI__.core.invoke;
 
       // 2. Create a function to call the command
-      async function callCustomCommand() {
+      function callCustomCommand() {
         // 3. Use the invoke function to call your Rust command
-        await invoke('my_custom_command');
+        invoke('my_custom_command');
       }
 
       // 4. Add an event listener to your button
