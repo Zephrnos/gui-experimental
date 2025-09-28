@@ -1,4 +1,5 @@
 use std::fs::{create_dir_all, write};
+use image::DynamicImage;
 use serde::Serialize;
 use crate::models::painting_list::PaintingList;
 use crate::models::image_data::ImageData;
@@ -26,14 +27,16 @@ fn write_json (painting_list: &PaintingList<Painting>, export_path: &String) {
     write(format!("{}/custompaintings.json", export_path), json_data).expect("Failed to write painting list JSON file");
 }
 
-fn image_to_paintings (image: ImageData) -> Vec<Painting> {
-
-    let mut paintings: Vec<Painting> = Vec::new();
+fn write_images(painting_list: &mut PaintingList<Painting>, image_list: Vec<ImageData>, export_path: &String) {
+    
+    for image in image_list {
 
         for (width, height) in image.get_sizes() {
 
             let id: String = format!("{}_{}x{}", image.id.clone().unwrap(), &width, &height);
             let filename: String = format!("{}_{}x{}", image.filename.clone().unwrap(), &width, &height);
+            let painting: DynamicImage = image.get_image().clone();
+            painting.save(format!("{}/{}.png", export_path, &filename)).expect("This shouldnt fail");
 
             let painting: Painting = Painting {
                 id,
@@ -44,18 +47,10 @@ fn image_to_paintings (image: ImageData) -> Vec<Painting> {
                 height, 
             };
 
-        paintings.push(painting);
+        painting_list.add_painting(painting);
             
         };
 
-    paintings
-
-}
-
-fn write_images(painting_list: &mut PaintingList<Painting>, image_list: Vec<ImageData>, export_path: &String) {
-    
-    for image in image_list {
-        todo!()
     }
 
 }

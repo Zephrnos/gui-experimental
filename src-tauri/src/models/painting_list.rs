@@ -67,12 +67,6 @@ impl<T> PaintingList<T> {
         self.paintings.push(painting);
     }
 
-    pub fn add_many_paintings(&mut self, paintings: Vec<T>) {
-        for painting in paintings {
-            self.paintings.push(painting);
-        }
-    }
-
     pub fn separate_paintings<U>(self) -> (PaintingList<U>, Vec<T>) {
         
         // 1. Create the new struct with a new, empty `paintings` vector.
