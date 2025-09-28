@@ -1,7 +1,6 @@
 use image::DynamicImage;
 use crate::models::image_size::ImageSize;
 
-
 #[derive(Debug)]
 pub struct ImageData {
     image:          DynamicImage,
