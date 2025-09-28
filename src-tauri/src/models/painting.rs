@@ -2,24 +2,24 @@
 use image::DynamicImage;
 use serde::Serialize;
 
+use crate::models::painting_size::{self, PaintingSize};
+
 #[derive(Serialize, Debug)]
 pub struct Painting {
-    #[serde(skip_serializing)]
+    #[serde(skip)]
     painting: DynamicImage,
     pub id: Option<String>,
     pub filename: Option<String>,
     pub title: Option<String>,
     pub artist: Option<String>,
-    width: u32,
-    height: u32,
+    painting_size: PaintingSize,
 }
 
 impl Painting {
 
     pub fn new(
         painting: DynamicImage, 
-        width: u32, 
-        height: u32
+        painting_size: PaintingSize,
     ) -> Self {
         Painting {
             painting,
@@ -27,8 +27,7 @@ impl Painting {
             filename: None,
             title: None,
             artist: None,
-            width,
-            height,
+            painting_size,
         }
     }
 

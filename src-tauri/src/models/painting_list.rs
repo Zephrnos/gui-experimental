@@ -8,6 +8,8 @@ pub struct PaintingList {
     pub version: String, 
     pub id: String, 
     pub description: String,
+    #[serde(skip)]
+    to_write: Vec<bool>,
     paintings: Vec<Painting>,
 }
 
@@ -18,7 +20,8 @@ impl Default for PaintingList {
             version: String::from("1.0.0"),
             id: String::from("http://example.com/paintinglist.json"),
             description: String::from("A list of paintings in the gallery"),
-            paintings: vec![],
+            to_write: Vec::new(),
+            paintings: Vec::new(),
         }
     }
 }
@@ -73,16 +76,6 @@ impl PaintingList {
 
     pub fn retrieve_paintings(&self) -> &Vec<Painting> {
         &self.paintings
-    }
-
-    pub fn new(paintings: Vec<Painting>) -> Self {
-        PaintingList {
-            schema: String::from("http://json-schema.org/draft-07/schema#"),
-            version: String::from("1.0.0"),
-            id: String::from("http://example.com/paintinglist.json"),
-            description: String::from("A list of paintings in the gallery"),
-            paintings: paintings,
-        }
     }
 
 }

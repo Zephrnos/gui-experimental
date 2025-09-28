@@ -1,31 +1,34 @@
 use crate::models::{painting::Painting, painting_size::PaintingSize};
-use image::{DynamicImage, GenericImageView};
+use image::{open, DynamicImage, GenericImageView};
 
 // The main function is now a clean, high-level summary.
-pub fn crop_image(image: &mut DynamicImage, size_config: PaintingSize) -> Vec<Painting> {
-    // 1. Calculate the optimal crop area based on the target ratio.
-    let dimensions_list = size_config.get_size();
-    let (width_start, height_start, crop_width, crop_height) =
-        calculate_crop_dimensions(image.dimensions(), dimensions_list[0]);
+pub fn crop_preview(path: String) -> Vec<Painting> {
 
-    // 2. Crop the original image in place.
-    let cropped_base_image = image.crop_imm(width_start, height_start, crop_width, crop_height);
+    let mut previews: Vec<Painting> = Vec::new();
+    let img = open(path).expect("This was not intended to fail");
+    let img_dims = img.dimensions();
 
-    // 3. Generate a Painting for each required size from the now-cropped image.
-    let mut paintings: Vec<Painting> = Vec::new();
-    for (width, height) in dimensions_list {    
-        let new_painting = Painting::new(cropped_base_image.clone(), width, height);
-        paintings.push(new_painting);
+
+    for size_variant in PaintingSize::iter() {
+        let target_size = size_variant.get_size()[0];
+        let (width_start, height_start, crop_width, crop_height) = 
+            calculate_crop_dimensions(img_dims, target_size);
+        
+        let crop_preview = img.clone().crop_imm(width_start, height_start, crop_width, crop_height);
+        
+        let new_painting = Painting::new(crop_preview, *size_variant);
+        previews.push(new_painting);
+
     }
 
-    paintings
-    
+    previews
+
 }
 
 // The complex logic is isolated in its own function.
-fn calculate_crop_dimensions(image_dims: (u32, u32), target_ratio: (u32, u32)) -> (u32, u32, u32, u32) {
+fn calculate_crop_dimensions(image_dims: (u32, u32), target_size: (u32, u32)) -> (u32, u32, u32, u32) {
     let (width, height) = image_dims;
-    let (img_width, img_height) = target_ratio;
+    let (img_width, img_height) = target_size;
 
     // Use cross-multiplication to avoid floating point math and integer division errors. Technically more performant?
     // We cast to u64 to prevent overflow when multiplying dimensions.

@@ -1,6 +1,7 @@
-use serde::{Deserialize, Serialize};
+use serde::{Serialize};
+use std::slice::Iter;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Debug, Clone, Copy)]
 pub enum PaintingSize {
     Square,
     Wide, 
@@ -10,6 +11,17 @@ pub enum PaintingSize {
 }
 
 impl PaintingSize {
+
+    pub fn iter() -> Iter<'static, PaintingSize> {
+        static PAINTING_SIZES: [PaintingSize; 5] = [
+            PaintingSize::Square,
+            PaintingSize::Wide,
+            PaintingSize::LongRectangle,
+            PaintingSize::Tall,
+            PaintingSize::TallRectangle,
+        ];
+        PAINTING_SIZES.iter()
+    }
 
     pub fn get_size(&self) -> Vec<(u32, u32)> {
         match self {

@@ -10,7 +10,8 @@ use std::sync::Mutex;
 pub fn run() {
   tauri::Builder::default()
     .manage(AppState {
-      paintings: Mutex::new(PaintingList::default())
+      paintings: Mutex::new(PaintingList::default()),
+      paths: Mutex::new(vec![])
     })
     .invoke_handler(tauri::generate_handler![commands::my_custom_command])
     .run(tauri::generate_context!())
