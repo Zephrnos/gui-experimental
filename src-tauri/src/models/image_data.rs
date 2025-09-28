@@ -1,33 +1,44 @@
-// src/painting.rs
+// src/Image_Data.rs
 use image::DynamicImage;
 use serde::Serialize;
 
-use crate::models::painting_size::{self, PaintingSize};
+use crate::models::image_size::{ImageSize};
 
-#[derive(Serialize, Debug)]
-pub struct Painting {
-    #[serde(skip)]
-    painting: DynamicImage,
+#[derive(Debug)]
+pub struct ImageData {
+    image: DynamicImage,
     pub id: Option<String>,
     pub filename: Option<String>,
     pub title: Option<String>,
     pub artist: Option<String>,
-    painting_size: PaintingSize,
+    image_size: ImageSize,
 }
 
-impl Painting {
+impl Serialize for ImageData {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer, 
+    {
+        
+        let mut state = serializer.serialize_struct("Image_Data", 6)?;
+        todo!()
+
+    }
+}
+
+impl ImageData {
 
     pub fn new(
-        painting: DynamicImage, 
-        painting_size: PaintingSize,
+        image: DynamicImage, 
+        image_size: ImageSize,
     ) -> Self {
-        Painting {
-            painting,
+        ImageData {
+            image,
             id: None,
             filename: None,
             title: None,
             artist: None,
-            painting_size,
+            image_size,
         }
     }
 
@@ -56,8 +67,8 @@ impl Painting {
         to_write
     }
 
-    pub fn get_painting(&self) -> &DynamicImage {
-        &self.painting
+    pub fn get_image(&self) -> &DynamicImage {
+        &self.image
     }
 
 }

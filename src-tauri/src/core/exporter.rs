@@ -20,7 +20,7 @@ fn write_json(paintings_list: &PaintingList, export_path: &String) {
 fn write_images(paintings_list: &PaintingList, export_path: &String) {
     let paintings = paintings_list.retrieve_paintings();
     for painting in paintings {
-        let img: &DynamicImage = painting.get_painting();
+        let img: &DynamicImage = painting.get_image();
         let _ = img.save(format!("{}/images/{}.png", export_path, painting.get_filename()));
     }
 }

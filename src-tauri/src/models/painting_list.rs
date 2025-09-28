@@ -1,4 +1,4 @@
-use crate::models::painting::Painting;
+use crate::models::image_data::ImageData;
 use serde::Serialize;
 
 #[derive(Serialize, Debug)]
@@ -10,7 +10,7 @@ pub struct PaintingList {
     pub description: String,
     #[serde(skip)]
     to_write: Vec<bool>,
-    paintings: Vec<Painting>,
+    paintings: Vec<ImageData>,
 }
 
 impl Default for PaintingList {
@@ -64,17 +64,17 @@ impl PaintingList {
         }
     }
 
-    pub fn add_painting(&mut self, painting: Painting) {
+    pub fn add_painting(&mut self, painting: ImageData) {
         self.paintings.push(painting);
     }
 
-    pub fn add_many_paintings(&mut self, paintings: Vec<Painting>) {
+    pub fn add_many_paintings(&mut self, paintings: Vec<ImageData>) {
         for painting in paintings {
             self.paintings.push(painting);
         }
     }
 
-    pub fn retrieve_paintings(&self) -> &Vec<Painting> {
+    pub fn retrieve_paintings(&self) -> &Vec<ImageData> {
         &self.paintings
     }
 

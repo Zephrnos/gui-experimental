@@ -1,23 +1,23 @@
-use crate::models::{painting::Painting, painting_size::PaintingSize};
-use image::{open, DynamicImage, GenericImageView};
+use crate::models::{image_data::ImageData, image_size::ImageSize};
+use image::{open, GenericImageView};
 
 // The main function is now a clean, high-level summary.
-pub fn crop_preview(path: String) -> Vec<Painting> {
+pub fn crop_preview(path: String) -> Vec<ImageData> {
 
-    let mut previews: Vec<Painting> = Vec::new();
+    let mut previews: Vec<ImageData> = Vec::new();
     let img = open(path).expect("This was not intended to fail");
     let img_dims = img.dimensions();
 
 
-    for size_variant in PaintingSize::iter() {
+    for size_variant in ImageSize::iter() {
         let target_size = size_variant.get_size()[0];
         let (width_start, height_start, crop_width, crop_height) = 
             calculate_crop_dimensions(img_dims, target_size);
         
         let crop_preview = img.clone().crop_imm(width_start, height_start, crop_width, crop_height);
         
-        let new_painting = Painting::new(crop_preview, *size_variant);
-        previews.push(new_painting);
+        let new_ImageData = ImageData::new(crop_preview, *size_variant);
+        previews.push(new_ImageData);
 
     }
 
