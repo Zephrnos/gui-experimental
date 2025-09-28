@@ -14,7 +14,8 @@ pub fn crop_preview(path: String) -> Vec<ImageData> {
         let (width_start, height_start, crop_width, crop_height) = 
             calculate_crop_dimensions(img_dims, target_size);
         
-        let crop_preview = img.clone().crop_imm(width_start, height_start, crop_width, crop_height);
+        let crop_view = img.view(width_start, height_start, crop_width, crop_height);
+        let crop_preview = image::DynamicImage::ImageRgba8(crop_view.to_image());
         
         let new_image_data = ImageData::new(crop_preview, *size_variant);
         previews.push(new_image_data);

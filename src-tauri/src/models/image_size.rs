@@ -23,14 +23,14 @@ impl ImageSize {
         PAINTING_SIZES.iter()
     }
 
-    pub fn get_size(&self) -> Vec<(u32, u32)> {
-        match self {
-            ImageSize::Square => vec![(1, 1), (2, 2), (3, 3), (4, 4)],
-            ImageSize::Wide => vec![(2, 1), (4, 2)],
-            ImageSize::LongRectangle => vec![(4, 3)],
-            ImageSize::Tall => vec![(1, 2), (2, 4)],
-            ImageSize::TallRectangle => vec![(3, 4)],
-        }
+    pub fn get_size(&self) -> &'static [(u32, u32)] {
+    match self {
+        ImageSize::Square => &[(1, 1), (2, 2), (3, 3), (4, 4)],
+        ImageSize::Wide => &[(2, 1), (4, 2)],
+        ImageSize::LongRectangle => &[(4, 3)],
+        ImageSize::Tall => &[(1, 2), (2, 4)],
+        ImageSize::TallRectangle => &[(3, 4)],
     }
+}
 
 }

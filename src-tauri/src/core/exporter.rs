@@ -31,11 +31,12 @@ fn write_images(painting_list: &mut PaintingList<Painting>, image_list: Vec<Imag
     
     for image in image_list {
 
+        let painting: DynamicImage = image.get_image().clone();
+
         for (width, height) in image.get_sizes() {
 
             let id: String = format!("{}_{}x{}", image.id.clone().unwrap(), &width, &height);
             let filename: String = format!("{}_{}x{}", image.filename.clone().unwrap(), &width, &height);
-            let painting: DynamicImage = image.get_image().clone();
             painting.save(format!("{}/{}.png", export_path, &filename)).expect("This shouldnt fail");
 
             let painting: Painting = Painting {
@@ -43,8 +44,8 @@ fn write_images(painting_list: &mut PaintingList<Painting>, image_list: Vec<Imag
                 filename,
                 name: image.name.clone().unwrap(),
                 artist: image.artist.clone().unwrap(), 
-                width, 
-                height, 
+                width: *width, 
+                height: *height, 
             };
 
         painting_list.add_painting(painting);

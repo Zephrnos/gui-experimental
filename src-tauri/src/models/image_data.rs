@@ -32,7 +32,7 @@ impl ImageData {
         &self.image
     }
 
-    pub fn get_sizes(&self) -> Vec<(u32, u32)> {
+    pub fn get_sizes(&self) -> &[(u32, u32)] {
         self.image_size.get_size()
     }
 
