@@ -1,5 +1,4 @@
 use image::DynamicImage;
-use serde::Serialize;
 use crate::models::image_size::ImageSize;
 
 
@@ -10,18 +9,9 @@ pub struct ImageData {
     pub filename:   Option<String>,
     pub name:       Option<String>,
     pub artist:     Option<String>,
-    image_size:     ImageSize,
+    pub image_size:     ImageSize,
 }
 
-#[derive(Serialize)]
-pub struct Painting {
-    id:         String,
-    filename:   String,
-    name:       String,
-    artist:     String,
-    width:      u32,
-    height:     u32
-}
 
 impl ImageData {
 
@@ -43,30 +33,8 @@ impl ImageData {
         &self.image
     }
 
-    pub fn to_paintings(&mut self) -> Vec<Painting> {
-
-        let mut paintings: Vec<Painting> = Vec::new();
-
-        for (width, height) in self.image_size.get_size() {
-
-            let id: String = format!("{}_{}x{}", self.id.clone().unwrap(), &width, &height);
-            let filename: String = format!("{}_{}x{}", self.filename.clone().unwrap(), &width, &height);
-
-            let painting: Painting = Painting {
-                id,
-                filename,
-                name: self.name.clone().unwrap(),
-                artist: self.artist.clone().unwrap(), 
-                width, 
-                height, 
-            };
-
-            paintings.push(painting);
-            
-        };
-
-        paintings
-
+    pub fn get_sizes(&self) -> Vec<(u32, u32)> {
+        self.image_size.get_size()
     }
 
 }

@@ -8,7 +8,7 @@ pub struct PaintingList<T> {
     pub id: String, 
     pub description: String,
     #[serde(skip)]
-    to_write: Vec<bool>,
+    pub writable: Vec<bool>,
     paintings: Vec<T>,
 }
 
@@ -19,7 +19,7 @@ impl<T> Default for PaintingList<T> {
             version: String::from("1.0.0"),
             id: String::from("http://example.com/paintinglist.json"),
             description: String::from("A list of paintings in the gallery"),
-            to_write: Vec::new(),
+            writable: Vec::new(),
             paintings: Vec::new(),
         }
     }
@@ -73,8 +73,25 @@ impl<T> PaintingList<T> {
         }
     }
 
-    pub fn retrieve_paintings(&self) -> &Vec<T> {
-        &self.paintings
+    pub fn separate_paintings<U>(self) -> (PaintingList<U>, Vec<T>) {
+        
+        // 1. Create the new struct with a new, empty `paintings` vector.
+        //    This moves all the metadata fields (schema, id, etc.).
+        let new_list = PaintingList {
+            schema: self.schema,
+            version: self.version,
+            id: self.id,
+            description: self.description,
+            writable: self.writable,
+            paintings: Vec::new(),
+        };
+
+        // 2. The only thing left in `self` is the original `paintings` vector.
+        //    We can now move it out.
+        let original_paintings = self.paintings;
+
+        // 3. Return both new pieces as a tuple.
+        (new_list, original_paintings)
     }
 
 }
