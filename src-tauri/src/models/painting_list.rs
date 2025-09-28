@@ -1,11 +1,13 @@
-#[derive(Debug)]
+use serde::Serialize;
+
+#[derive(Serialize, Debug)]
 pub struct PaintingList<T> {
-    // #[serde(rename = "$schema")]
+    #[serde(rename = "$schema")]
     pub schema: String,
     pub version: String, 
     pub id: String, 
     pub description: String,
-    // #[serde(skip)]
+    #[serde(skip)]
     to_write: Vec<bool>,
     paintings: Vec<T>,
 }
