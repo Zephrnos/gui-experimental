@@ -1,6 +1,6 @@
 // src/Image_Data.rs
 use image::DynamicImage;
-use crate::models::image_size::{ImageSize};
+use crate::models::image_size::ImageSize;
 
 
 #[derive(Debug)]
@@ -70,8 +70,9 @@ impl ImageData {
     pub fn to_paintings(&mut self) -> Vec<Painting> {
         let paintings: Vec<Painting> = Vec::new();
         for size in self.image_size.get_size() {
+            // let painting = 
             todo!()
-        }
+        };
 
         paintings
 
