@@ -1,7 +1,5 @@
-use std::fmt::format;
-
-// src/Image_Data.rs
 use image::DynamicImage;
+use serde::Serialize;
 use crate::models::image_size::ImageSize;
 
 
@@ -15,7 +13,8 @@ pub struct ImageData {
     image_size:     ImageSize,
 }
 
-struct Painting {
+#[derive(Serialize)]
+pub struct Painting {
     id:         String,
     filename:   String,
     name:       String,
