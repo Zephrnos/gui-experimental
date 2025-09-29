@@ -13,8 +13,12 @@ fn main() {
             Ok(())
         })
         .on_menu_event(|_app_handle, event| { // <-- Corrected to accept two arguments
-            if event.id() == "quit" {
-                std::process::exit(0);
+            match event.id().as_ref() {
+              "quit" => {std::process::exit(0);}
+              "open_file" => {}
+              "export_pack" => {}
+              "import_pack" => {}
+              _ => {}
             }
         })
         .run(tauri::generate_context!())
@@ -22,15 +26,25 @@ fn main() {
 }
 
 fn build_menu(app: &App) -> tauri::Result<()> {
-    let open_item = MenuItemBuilder::new("Open File").id("OpenFile").build(app)?;
-    let build_item = MenuItemBuilder::new("Build Pack").id("BuildPack").build(app)?;
+    let quit_item = MenuItemBuilder::new("Quit").id("quit").build(app)?;
+    let open_item = MenuItemBuilder::new("Open Image(s)").id("open_file").build(app)?;
+    let export_item = MenuItemBuilder::new("Export Pack").id("export_pack").build(app)?;
+    let import_item = MenuItemBuilder::new("Import Pack (Unimplimented)").id("import_pack").build(app)?;
 
     let file_menu = SubmenuBuilder::new(app, "File")
         .item(&open_item)
-        .item(&build_item)
         .build()?;
 
-    let menu = MenuBuilder::new(app).item(&file_menu).build()?;
+    let pack_menu = SubmenuBuilder::new(app, "Pack")
+        .item(&export_item)
+        .item(&import_item)
+        .build()?;
+
+    let menu = MenuBuilder::new(app)
+      .item(&file_menu)
+      .item(&pack_menu)
+      .item(&quit_item)
+      .build()?;
 
     app.set_menu(menu)?;
 
