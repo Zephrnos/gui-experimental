@@ -86,7 +86,7 @@
     <script>
         // 1. The data source ("vector of something"). 
         // Each object in this array represents one logical row in your grid.
-        const dataVector = [
+        const imageVector = [
             { name: "Atlas", price: 120, stock: 15 },
             { name: "Echo", price: 299, stock: 5 },
             { name: "Titan", price: 75, stock: 30 },
@@ -109,7 +109,7 @@
         const gridContainer = document.getElementById('dynamicGrid');
 
         // 3. Loop through the data vector to generate the HTML
-        dataVector.forEach((item) => {
+        imageVector.forEach((item) => {
             
             // --- Column 1: Name ---
             const nameCell = document.createElement('div');

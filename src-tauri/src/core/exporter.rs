@@ -17,17 +17,17 @@ struct Painting {
     height:     u32
 }
 
-fn write_icon(export_path: &String) {
+fn write_icon(export_path: &str) {
     create_dir_all(format!("{}/images", export_path)).expect("Failed to create images directory");
     write(format!("{}/icon.png", export_path), DEFAULT_ICON).expect("Failed to write default icon");
 }
 
-fn write_json (painting_list: &PaintingList<Painting>, export_path: &String) {
+fn write_json (painting_list: &PaintingList<Painting>, export_path: &str) {
     let json_data = serde_json::to_string_pretty(painting_list).expect("Failed to serialize painting list");
     write(format!("{}/custompaintings.json", export_path), json_data).expect("Failed to write painting list JSON file");
 }
 
-fn write_images(painting_list: &mut PaintingList<Painting>, image_list: Vec<ImageData>, export_path: &String) {
+fn write_images(painting_list: &mut PaintingList<Painting>, image_list: Vec<ImageData>, export_path: &str) {
 
     let mut index: usize = 0;
     
@@ -39,8 +39,8 @@ fn write_images(painting_list: &mut PaintingList<Painting>, image_list: Vec<Imag
 
             for (width, height) in image.get_sizes() {
 
-                let id: String = format!("{}_{}x{}", image.id.clone().unwrap(), &width, &height);
-                let filename: String = format!("{}_{}x{}", image.filename.clone().unwrap(), &width, &height);
+                let id: String = format!("{}_{}x{}", image.id.as_ref().unwrap(), &width, &height);
+                let filename: String = format!("{}_{}x{}", image.filename.as_ref().unwrap(), &width, &height);
                 painting.save(format!("{}/{}.png", export_path, &filename)).expect("This shouldnt fail");
 
                 let painting: Painting = Painting {
@@ -60,17 +60,28 @@ fn write_images(painting_list: &mut PaintingList<Painting>, image_list: Vec<Imag
     }
 }
 
-pub fn export(image_list: PaintingList<ImageData>, export_path: String) {
+pub fn export(image_list: PaintingList<ImageData>, export_path: &str) {
     
-
     let (mut painting_list, image_data): (PaintingList<Painting>, Vec<ImageData>) =
         image_list.separate_paintings();
 
-    write_images(&mut painting_list, image_data, &export_path);
-    write_json(&painting_list, &export_path);
-    write_icon(&export_path);
-
-
+    write_images(&mut painting_list, image_data, export_path);
+    write_json(&painting_list, export_path);
+    write_icon(export_path);
 
 }
 
+pub fn save_previews(image_list: &Vec<ImageData>, dir: &str) -> Vec<String> {
+    let mut saved_paths = Vec::new(); // Create a vector to store the paths
+
+    for image in image_list {
+        let preview_image = image.get_image();
+        let file_path_str = format!("{}/{}.png", dir, image.filename.as_ref().unwrap());
+        
+        preview_image.save(&file_path_str).expect("This shouldn't fail");
+        
+        saved_paths.push(file_path_str); // Add the new path to our vector
+    }
+
+    saved_paths // Return the list of paths
+}

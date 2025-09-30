@@ -1,4 +1,5 @@
 use serde::Serialize;
+use rand::Rng;
 
 #[derive(Serialize, Debug)]
 pub struct PaintingList<T> {
@@ -14,10 +15,15 @@ pub struct PaintingList<T> {
 
 impl<T> Default for PaintingList<T> {
     fn default() -> Self {
+
+        let mut rng = rand::rng();
+        let random_int: i32 = rng.random_range(56000..=128000);
+        let random_id = format!("{}", random_int);
+        
         PaintingList {
             schema: String::from("http://json-schema.org/draft-07/schema#"),
             version: String::from("1.0.0"),
-            id: String::from("http://example.com/paintinglist.json"),
+            id: random_id, 
             description: String::from("A list of paintings in the gallery"),
             writable: Vec::new(),
             paintings: Vec::new(),
@@ -87,5 +93,4 @@ impl<T> PaintingList<T> {
         // 3. Return both new pieces as a tuple.
         (new_list, original_paintings)
     }
-
 }

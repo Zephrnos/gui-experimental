@@ -29,7 +29,7 @@ fn build_menu(app: &App) -> tauri::Result<()> {
     let quit_item = MenuItemBuilder::new("Quit").id("quit").build(app)?;
     let open_item = MenuItemBuilder::new("Open Image(s)").id("open_file").build(app)?;
     let export_item = MenuItemBuilder::new("Export Pack").id("export_pack").build(app)?;
-    let import_item = MenuItemBuilder::new("Import Pack (Unimplimented)").id("import_pack").build(app)?;
+    // let import_item = MenuItemBuilder::new("Import Pack (Unimplimented)").id("import_pack").build(app)?;
 
     let file_menu = SubmenuBuilder::new(app, "File")
         .item(&open_item)
@@ -37,7 +37,7 @@ fn build_menu(app: &App) -> tauri::Result<()> {
 
     let pack_menu = SubmenuBuilder::new(app, "Pack")
         .item(&export_item)
-        .item(&import_item)
+        // .item(&import_item)
         .build()?;
 
     let menu = MenuBuilder::new(app)
