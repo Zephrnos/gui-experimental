@@ -9,6 +9,7 @@ pub struct ImageData {
     pub name:       Option<String>,
     pub artist:     Option<String>,
     pub image_size:     ImageSize,
+    pub selected: bool
 }
 
 
@@ -25,7 +26,12 @@ impl ImageData {
             name:      None,
             artist:     None,
             image_size,
+            selected: true
         }
+    }
+
+    pub fn set_selected(&mut self, is_selected: bool) {
+        self.selected = is_selected;
     }
 
     pub fn get_image(&self) -> &DynamicImage {

@@ -8,8 +8,6 @@ pub struct PaintingList<T> {
     pub version: String, 
     pub id: String, 
     pub description: String,
-    #[serde(skip)]
-    pub writable: Vec<bool>,
     paintings: Vec<T>,
 }
 
@@ -25,7 +23,6 @@ impl<T> Default for PaintingList<T> {
             version: String::from("1.0.0"),
             id: random_id, 
             description: String::from("A list of paintings in the gallery"),
-            writable: Vec::new(),
             paintings: Vec::new(),
         }
     }
@@ -82,7 +79,6 @@ impl<T> PaintingList<T> {
             version: self.version,
             id: self.id,
             description: self.description,
-            writable: self.writable,
             paintings: Vec::new(),
         };
 

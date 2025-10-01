@@ -1,7 +1,8 @@
-use tauri::{AppHandle, Manager};
-use std::{fs};
+use std::sync::Mutex;
 
-use crate::core::{cropper, exporter};
+use tauri::State;
+
+use crate::{app_state::AppState, core::{cropper, exporter}};
 
 /*
 
@@ -37,15 +38,18 @@ pub async fn open_file() -> Option<Vec<String>> {
 Second command run when a window is opened
 
 Init:
+ - Takes in a Mutex Lock of our AppState so we can save all the image previews as ImageData objects
  - Takes in a single string [a single image gets all its previews generated in one go]
 After:
- - Returns a Vec<String>, where all teh strings are base64 encodings of the image crops
+ - Returns a Vec<String>, where all the strings are base64 encodings of the image crops
 
 */
 #[tauri::command]
-pub fn generate_previews(source_path: String) -> Result<Vec<String>, String> {
+pub fn generate_previews(source_path: String, state: State<Mutex<AppState>>) -> Result<Vec<String>, String> {
     // 1. Call your existing image cropping logic
     let image_data_vec = cropper::crop_preview(&source_path);
+
+    todo!(); // todo: make sure to write the Vec<ImageData> to the shared state
 
     // 2. Call your function to generate Base64 strings in memory
     let saved_base64_strings = exporter::generate_base64_previews(&image_data_vec);
@@ -56,12 +60,22 @@ pub fn generate_previews(source_path: String) -> Result<Vec<String>, String> {
 
 /*
 
+Ran whenever a photo in the GUI is deselected. Also allow for updating the photo as selected.
+
+*/
+#[tauri::command]
+pub async fn set_selected(selected: bool) {
+
+}
+
+/*
+
 Final command called when window is opened
 
 Init:
  - Takes in an export path
 After: 
- - Writes all the images to the export directory with given data, and closes program
+ - Writes all the images to the export directory with given data, and closes the program
 
 */
 #[tauri::command]

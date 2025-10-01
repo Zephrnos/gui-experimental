@@ -30,12 +30,10 @@ fn write_json (painting_list: &PaintingList<Painting>, export_path: &str) {
 }
 
 fn write_images(painting_list: &mut PaintingList<Painting>, image_list: Vec<ImageData>, export_path: &str) {
-
-    let mut index: usize = 0;
     
     for image in image_list {
 
-        if painting_list.writable[index] {
+        if image.selected {
 
             let painting: DynamicImage = image.get_image().clone();
 
@@ -58,7 +56,6 @@ fn write_images(painting_list: &mut PaintingList<Painting>, image_list: Vec<Imag
                 
             };
         }
-        index += 1;
     }
 }
 
