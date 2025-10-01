@@ -3,9 +3,15 @@
     <button id="my-button">Invoke Command</button>
 
     <script>
-      import { listen } from '@tauri-apps/api/event';
       // 1. Get the invoke function from the global Tauri object
       const invoke = window.__TAURI__.core.invoke;
+      const listen = window.__TAURI__.event.listen;
+
+      listen('menu:open_and_process_images', (event) => {
+        console.log('Menu event received from Rust!');
+        // 3. Invoke the command as before
+        invoke('open_and_process_images');
+      });
 
       // 2. Create a function to call the command
       async function callCustomCommand() {

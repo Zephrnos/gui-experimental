@@ -36,9 +36,9 @@ pub fn run() {
               println!("[COMMAND] quit received lib.rs");
               std::process::exit(0); 
             }
-            "open_file" => { 
-              println!("[COMMAND] open_file received lib.rs");
-              app_handle.emit("menu:open_file", ()).unwrap(); 
+            "open_and_process_images" => { 
+              println!("[COMMAND] open_and_process_images received lib.rs");
+              app_handle.emit("menu:open_and_process_images", ()).unwrap(); 
             }
             "export_pack" => { 
               println!("[COMMAND] export_pack received lib.rs");
@@ -53,7 +53,7 @@ pub fn run() {
 
 fn build_menu(app: &App) -> tauri::Result<()> {
     let quit_item = MenuItemBuilder::new("Quit").id("quit").build(app)?;
-    let open_item = MenuItemBuilder::new("Open Image(s)").id("open_file").build(app)?;
+    let open_item = MenuItemBuilder::new("Open Image(s)").id("open_and_process_images").build(app)?;
     let export_item = MenuItemBuilder::new("Export Pack").id("export_pack").build(app)?;
 
     let file_menu = SubmenuBuilder::new(app, "File")
