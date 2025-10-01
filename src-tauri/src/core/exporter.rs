@@ -60,6 +60,12 @@ fn write_images(painting_list: &mut PaintingList<Painting>, image_list: Vec<Imag
     }
 }
 
+
+/*
+
+This is a final export call to take all the files that we want and write them to a directory of our choice
+
+*/
 pub fn export(image_list: PaintingList<ImageData>, export_path: &str) {
     
     let (mut painting_list, image_data): (PaintingList<Painting>, Vec<ImageData>) =
@@ -71,6 +77,25 @@ pub fn export(image_list: PaintingList<ImageData>, export_path: &str) {
 
 }
 
+/*
+
+This creates previews of all images in a Vec<ImageData>
+
+Process:
+
+Init:
+ - Take in &Vec<ImageData>
+ - Process the 5 views of the image as defined in image_size.rs
+    - Square
+    - Wide
+    - LongRectangle
+    - Tall
+    - TallRectangle
+ - Return a Vec<String>, where the String is the absolute name of the filepath to the image.
+
+ ? Consider makign it return a Base64 String insetad so it is immediately readable by frontend HTML?
+
+*/
 pub fn save_previews(image_list: &Vec<ImageData>, dir: &str) -> Vec<String> {
     let mut saved_paths = Vec::new(); // Create a vector to store the paths
 

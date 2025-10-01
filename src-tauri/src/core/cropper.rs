@@ -1,6 +1,11 @@
 use crate::models::{image_data::ImageData, image_size::ImageSize};
 use image::{open, GenericImageView};
 
+/*
+
+Used as an intermediary function to get proper crop dimensions of a given image. No public use.
+
+*/
 fn calculate_crop_dimensions(image_dims: (u32, u32), target_size: (u32, u32)) -> (u32, u32, u32, u32) {
     let (width, height) = image_dims;
     let (img_width, img_height) = target_size;
@@ -25,6 +30,15 @@ fn calculate_crop_dimensions(image_dims: (u32, u32), target_size: (u32, u32)) ->
     (width_start, height_start, crop_width, crop_height)
 }
 
+/* 
+
+Returns a Vec<ImageData> so we can attack it to a PaintingList<T>, where;
+
+PaintingList<ImageData> 
+
+has a Vec<ImageData> of images to process and draw previews from
+
+*/
 pub fn crop_preview(path: String) -> Vec<ImageData> {
 
     let mut previews: Vec<ImageData> = Vec::new();
