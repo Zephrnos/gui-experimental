@@ -29,7 +29,7 @@ pub async fn generate_and_save_previews(app: AppHandle, source_path: String) -> 
 }
 
 #[tauri::command]
-async fn open_file() -> Option<Vec<String>> {
+pub async fn open_file() -> Option<Vec<String>> {
     // Use the `rfd` crate to open an async file dialog that allows multiple selections
     let files = rfd::AsyncFileDialog::new()
         .set_title("Choose files...")

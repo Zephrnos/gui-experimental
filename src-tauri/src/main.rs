@@ -1,6 +1,3 @@
-// src-tauri/src/main.rs
-
-// Prevents a console window from appearing on Windows in release builds.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use tauri::menu::{MenuBuilder, MenuItemBuilder, SubmenuBuilder};
@@ -12,7 +9,7 @@ fn main() {
             build_menu(app)?;
             Ok(())
         })
-        .on_menu_event(|_app_handle, event| { // <-- Corrected to accept two arguments
+        .on_menu_event(|_app_handle, event| {
             match event.id().as_ref() {
               "quit" => {std::process::exit(0);}
               "open_file" => {}
