@@ -1,58 +1,65 @@
-<!-- <html>
-  <body>
-    <button id="my-button">Invoke Command</button><br>
-    <input type="checkbox" id="vehicle1" name="vehicle1" value="Bike">
-    <label for="vehicle1"> I have a bike</label><br>
-    <input type="checkbox" id="vehicle2" name="vehicle2" value="Car">
-    <label for="vehicle2"> I have a car</label><br>
-    <input type="checkbox" id="vehicle3" name="vehicle3" value="Boat">
-    <label for="vehicle3"> I have a boat</label><br>
-    
-
-    <script>
-      // 1. Get the invoke function from the global Tauri object
-      const invoke = window.__TAURI__.core.invoke;
-
-      // 2. Create a function to call the command
-      function callCustomCommand() {
-        // 3. Use the invoke function to call your Rust command
-        invoke('my_custom_command');
-      }
-
-      // 4. Add an event listener to your button
-      document.getElementById('my-button').addEventListener('click', callCustomCommand);
-    </script>
-  </body>
-</html> -->
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic Grid Generation from Data</title>
+    <title>Dynamic Image Grid: 5 Columns (Metadata Per Row)</title>
 
     <style>
+        /* General body styling */
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
             background-color: #f0f8ff;
         }
 
-        /* 1. Style for the main container (The Grid itself) */
+        /* GLOBAL METADATA STYLING */
+        #global-metadata {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 15px;
+            margin-bottom: 30px; /* Increased separation */
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            max-width: 1200px; 
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        #global-metadata input[type="text"] {
+            flex-grow: 1;
+            min-width: 200px; 
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1em;
+            box-sizing: border-box;
+        }
+        
+        /* ROW METADATA STYLING (New Section) */
+        .row-metadata {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 10px 0;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .row-metadata input[type="text"] {
+            flex-grow: 1;
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        /* 1. Style for the main container (The entire grid and row structure) */
         .grid-container {
-            /* Activates the CSS Grid system */
-            display: grid; 
-            
-            /* Defines the columns: 3 columns, each taking an equal fraction (1fr) of the space */
-            grid-template-columns: 1fr 1fr 1fr;
-            
-            /* Space between the grid cells */
-            gap: 10px; 
-            
-            /* General container styling */
-            max-width: 900px;
+            max-width: 1200px; 
             margin: 20px auto; 
             padding: 15px;
             border: 2px solid #0056b3;
@@ -61,84 +68,217 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
+        /* CONTAINER FOR 5 IMAGES IN A ROW (New Section) */
+        .image-row-wrapper {
+            display: grid; 
+            /* Defines 5 equal columns (1fr each) */
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px; 
+            padding-bottom: 20px;
+        }
+
         /* 2. Style for the individual items (The Cells) */
         .grid-item {
-            /* Styling to make the cells visible and distinct */
             background-color: #e6f7ff;
-            color: #333;
-            padding: 15px;
-            border: 1px solid #b3e0ff;
+            border: 3px solid transparent; 
             border-radius: 4px;
-            font-size: 1em;
-            font-weight: bold;
-            display: flex;
+            overflow: hidden; 
+            position: relative;
+            cursor: pointer; 
+            transition: border-color 0.2s, background-color 0.2s; 
+            
+            /* Enforce Square aspect ratio for clean grid layout */
+            aspect-ratio: 1 / 1; 
+        }
+        
+        /* 3. Style for the actual image */
+        .grid-item img {
+            width: 100%;
+            height: 100%; /* Fill the square cell */
+            padding: 10px; /* Padding for visual separation inside the cell */
+            /* Scale image to fit completely within the box */
+            object-fit: contain; 
+            border-radius: 4px;
+        }
+
+        /* Removed: .info-box and its related input styling, as they are now per-row */
+
+        /* 4. Checkmark Styling (remains the same) */
+        .checkmark {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 24px;
+            height: 24px;
+            background-color: #10b981; 
+            color: white;
+            border-radius: 50%;
+            display: none; 
             align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            line-height: 1;
+            z-index: 10;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+            font-weight: bold;
+        }
+        
+        /* 5. VISUAL FEEDBACK: Style when the item is selected (remains the same) */
+        .grid-item.selected {
+            border-color: #10b981; 
+            background-color: #ccffeb; 
+        }
+
+        /* 6. SHOW the checkmark when the parent item is selected (remains the same) */
+        .grid-item.selected .checkmark {
+            display: flex; 
+        }
+
+        /* Media Query for Responsiveness */
+        @media (max-width: 768px) {
+             .image-row-wrapper {
+                /* On smaller screens, revert to 2 columns */
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
     </style>
 </head>
+
 <body>
 
-    <h1>Dynamically Generated Product List Grid</h1>
+    <h1>5-Column Image Grid Example (Development Mock)</h1>
+    <p>
+        The images are loaded via a Base64 mock. The "Name" and "Artist" fields are now shared by the entire row of 5 images. Click any image to select/deselect it.
+    </p>
+
+    <!-- GLOBAL METADATA FIELDS -->
+    <div id="global-metadata">
+        <input type="text" id="globalVersion" placeholder="Version (e.g., v1.0.1)">
+        <input type="text" id="globalDescription" placeholder="Project Description">
+        <input type="text" id="globalId" placeholder="Unique ID">
+        <input type="text" id="globalPackName" placeholder="Pack Name">
+    </div>
+    <!-- END GLOBAL METADATA FIELDS -->
 
     <div class="grid-container" id="dynamicGrid">
-        </div>
+        <!-- Content will be injected here per row -->
+    </div>
 
     <script>
-        // 1. The data source ("vector of something"). 
-        // Each object in this array represents one logical row in your grid.
-        const imageVector = [
-            { name: "Atlas", price: 120, stock: 15 },
-            { name: "Echo", price: 299, stock: 5 },
-            { name: "Titan", price: 75, stock: 30 },
-            { name: "Viper", price: 345, stock: 22 },
-            { name: "Orb", price: 50, stock: 8 },
-            { name: "Nova", price: 99, stock: 40 },
-            { name: "Nova", price: 99, stock: 40 },
-            { name: "Nova", price: 99, stock: 40 },
-            { name: "Nova", price: 99, stock: 40 },
-            { name: "Nova", price: 99, stock: 40 },
-            { name: "Nova", price: 99, stock: 40 },
-            { name: "Nova", price: 99, stock: 40 },
-            { name: "Nova", price: 99, stock: 40 },
-            { name: "Nova", price: 99, stock: 40 },
-            { name: "Blaze", price: 150, stock: 12 }
-            // Add more objects here to automatically create more rows!
+        const PLACEHOLD_URL_BASE = "https://placehold.co/";
+
+        // Map your size types to specific placeholder dimensions for visual demonstration
+        const IMAGE_MAPPING = {
+            "Square": "400x400/3B82F6/ffffff?text=Square",
+            "Wide": "800x450/10B981/ffffff?text=Wide",
+            "LongRectangle": "200x600/EF4444/ffffff?text=Long+Rect",
+            "Tall": "400x600/F59E0B/ffffff?text=Tall",
+            "TallRectangle": "150x500/8B5CF6/ffffff?text=Tall+Rect",
+        };
+
+        /**
+         * MOCK FUNCTION: Simulates returning a Base64 string.
+         */
+        function getMockDataUrl(item) {
+            const sizeKey = item.size;
+            let placeholderTemplate = IMAGE_MAPPING[sizeKey] || "400x400/AAAAAA/000000?text=Unknown";
+            
+            // Customize text to include the description for uniqueness in the grid
+            return PLACEHOLD_URL_BASE + placeholderTemplate.replace(/\?text=([^&]*)/, `?text=$1+${item.description.slice(-1)}`);
+        }
+
+
+        // 1. New data source structure: organized into rows, with shared metadata
+        const imageRowsData = [
+            {
+                rowName: "Pack 1: Crimson Art",
+                rowArtist: "Alex Lee",
+                images: [
+                    { path: "test_images/square_image.jpg", size: "Square", description: "Image 1" },
+                    { path: "test_images/wide_image.jpg", size: "Wide", description: "Image 2" },
+                    { path: "test_images/long_rectangle.jpg", size: "LongRectangle", description: "Image 3" },
+                    { path: "test_images/tall_image.jpg", size: "Tall", description: "Image 4" },
+                    { path: "test_images/taller_rect.jpg", size: "TallRectangle", description: "Image 5" },
+                ]
+            },
+            {
+                rowName: "Pack 2: Blue Abstracts",
+                rowArtist: "Fiona G. & Team",
+                images: [
+                    { path: "test_images/square_2.jpg", size: "Square", description: "Image 6" },
+                    { path: "test_images/wide_2.jpg", size: "Wide", description: "Image 7" },
+                    { path: "test_images/long_2.jpg", size: "LongRectangle", description: "Image 8" },
+                    { path: "test_images/tall_2.jpg", size: "Tall", description: "Image 9" },
+                    { path: "test_images/taller_2.jpg", size: "TallRectangle", description: "Image 10" },
+                ]
+            }
         ];
 
         // 2. Get the empty container element from the HTML
         const gridContainer = document.getElementById('dynamicGrid');
 
-        // 3. Loop through the data vector to generate the HTML
-        imageVector.forEach((item) => {
-            
-            // --- Column 1: Name ---
-            const nameCell = document.createElement('div');
-            nameCell.classList.add('grid-item');
-            nameCell.textContent = `Name: ${item.name}`;
-            gridContainer.appendChild(nameCell);
-            
-            // --- Column 2: Price ---
-            const priceCell = document.createElement('div');
-            priceCell.classList.add('grid-item');
-            priceCell.textContent = `Price: $${item.price}`;
-            gridContainer.appendChild(priceCell);
+        // 3. Loop through the row data array to generate sections
+        imageRowsData.forEach((rowData, rowIndex) => {
+            // --- A. Create the Row Metadata Inputs ---
+            const metadataDiv = document.createElement('div');
+            metadataDiv.classList.add('row-metadata');
 
-            // --- Column 3: Stock ---
-            const stockCell = document.createElement('div');
-            stockCell.classList.add('grid-item');
+            // Name Input (per row)
+            const nameInput = document.createElement('input');
+            nameInput.type = 'text';
+            nameInput.placeholder = 'Row Name';
+            nameInput.value = rowData.rowName || '';
+            nameInput.title = 'Row Name';
+
+            // Artist Input (per row)
+            const artistInput = document.createElement('input');
+            artistInput.type = 'text';
+            artistInput.placeholder = 'Row Artist';
+            artistInput.value = rowData.rowArtist || '';
+            artistInput.title = 'Row Artist';
+
+            metadataDiv.appendChild(nameInput);
+            metadataDiv.appendChild(artistInput);
             
-            // Example of conditional styling based on data
-            if (item.stock < 10) {
-                stockCell.style.backgroundColor = '#ffc0cb'; // Light pink for low stock
-                stockCell.textContent = `Stock: LOW (${item.stock})`;
-            } else {
-                stockCell.textContent = `Stock: ${item.stock}`;
-            }
+            gridContainer.appendChild(metadataDiv);
+
+
+            // --- B. Create the 5-Column Grid for Images ---
+            const imageWrapper = document.createElement('div');
+            imageWrapper.classList.add('image-row-wrapper');
             
-            gridContainer.appendChild(stockCell);
+            // Loop through the 5 images in the current row
+            rowData.images.forEach((item, imageIndex) => {
+                // Create the grid cell (the container)
+                const cell = document.createElement('div');
+                cell.classList.add('grid-item');
+                
+                // Create the actual image element
+                const img = document.createElement('img');
+                img.src = getMockDataUrl(item); 
+                img.alt = `Image ${rowIndex * 5 + imageIndex + 1} from path: ${item.path}`; 
+                
+                // Create the checkmark element
+                const checkmark = document.createElement('div');
+                checkmark.classList.add('checkmark');
+                checkmark.innerHTML = '&#10003;'; // Unicode checkmark symbol (✓)
+                
+                // *** INTERACTION LOGIC ***
+                cell.addEventListener('click', () => {
+                    // Toggle the 'selected' class on the cell
+                    const isSelected = cell.classList.toggle('selected');
+                    
+                    // Log the state 
+                    console.log(`Image ${rowIndex * 5 + imageIndex + 1} is now ${isSelected ? 'SELECTED' : 'DESELECTED'}.`);
+                });
+
+                // Append elements
+                cell.appendChild(img);
+                cell.appendChild(checkmark);
+                imageWrapper.appendChild(cell);
+            });
             
-            // Since we append 3 cells per loop iteration, CSS Grid automatically wraps
-            // them into the next row, creating the 3-column x N-row layout.
+            gridContainer.appendChild(imageWrapper);
         });
     </script>
 
