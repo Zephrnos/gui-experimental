@@ -33,38 +33,45 @@ impl<T> Default for PackList<T> {
     }
 }
 
-fn check_no_input(input: String) -> Option<String> {
+fn check_no_input(input: &str) -> Option<String> {
     if input.trim().is_empty() {
         None
     } else {
-         Some(input)
+         Some(input.to_string())
     }
 }
 
 impl<T> PackList<T> {
 
-    pub fn set_schema(&mut self, schema: String) {
+    pub fn set_pack_name(&mut self, pack_name: &str) {
+        match check_no_input(pack_name) {
+            Some(valid_pack_name) => self.pack_name = valid_pack_name,
+            None => {},
+        }
+    }
+
+    pub fn set_schema(&mut self, schema: &str) {
         match check_no_input(schema) {
             Some(valid_schema) => self.schema = valid_schema,
             None => {},
         }
     }
 
-    pub fn set_version(&mut self, version: String) {
+    pub fn set_version(&mut self, version: &str) {
         match check_no_input(version) {
             Some(valid_version) => self.version = valid_version,
             None => {},
         }
     }
 
-    pub fn set_id(&mut self, id: String) {
+    pub fn set_id(&mut self, id: &str) {
         match check_no_input(id) {
             Some(valid_id) => self.id = valid_id,
             None => {},
         }
     }
 
-    pub fn set_description(&mut self, description: String) {
+    pub fn set_description(&mut self, description: &str) {
         match check_no_input(description) {
             Some(valid_description) => self.description = valid_description,
             None => {},

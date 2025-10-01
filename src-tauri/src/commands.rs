@@ -85,7 +85,21 @@ pub fn update_row_metadata(
 }
 
 #[tauri::command]
-pub fn update_pack_metadata() {
+pub fn update_pack_metadata(
+    pack_name: &str,
+    version: &str,
+    id: &str,
+    description: &str,
+    state: State<'_, Mutex<AppState>>
+) {
+    let mut app_state = state.lock().unwrap();
+
+    let pack_metadata = &mut app_state.pack_metadata;
+
+    pack_metadata.set_pack_name(pack_name);
+    pack_metadata.set_version(version);
+    pack_metadata.set_id(id);
+    pack_metadata.set_description(description);
 
 }
 

@@ -14,7 +14,7 @@ pub struct SourceImageGroup {
 #[derive(Debug, Default)]
 pub struct AppState {
     // This stores global metadata like version and description.
-    pub pack_metadata: PackList<()>,
+    pub pack_metadata: PackList<ImageData>,
 
     // This vector holds all the source images and their groups of crops.
     // Each element corresponds to one row in the UI.
