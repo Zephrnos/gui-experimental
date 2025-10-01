@@ -4,7 +4,7 @@ use std::fs;
 use crate::core::{cropper, exporter};
 
 #[tauri::command]
-pub async fn generate_and_save_previews(app: AppHandle, source_path: String) -> Result<Vec<String>, String> {
+pub async fn generate_previews(app: AppHandle, source_path: String) -> Result<Vec<String>, String> {
     // 1. Get the path to the app's local data directory
     let app_data_dir = app.path()
         .app_data_dir()
@@ -19,9 +19,8 @@ pub async fn generate_and_save_previews(app: AppHandle, source_path: String) -> 
     let image_data_vec = cropper::crop_preview(source_path);
 
     // 4. Call your modified save function
-    let saved_file_paths = exporter::save_previews(
+    let saved_file_paths = exporter::generate_base64_previews(
         &image_data_vec, 
-        &preview_dir.to_string_lossy()
     );
 
     // 5. Return the list of file paths to the frontend

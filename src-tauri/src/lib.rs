@@ -7,7 +7,7 @@ pub mod app_state;
 pub fn run() {
   tauri::Builder::default()
     .invoke_handler(tauri::generate_handler![
-      commands::generate_and_save_previews,
+      commands::generate_previews,
       commands::open_file,
       commands::export_pack
     ])

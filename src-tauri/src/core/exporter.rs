@@ -1,6 +1,8 @@
 use std::fs::{create_dir_all, write};
-use image::DynamicImage;
+use image::{DynamicImage, ImageFormat};
 use serde::Serialize;
+use std::io::Cursor;
+use base64::{Engine as _, engine::general_purpose};
 use crate::models::painting_list::PaintingList;
 use crate::models::image_data::ImageData;
 
@@ -79,34 +81,38 @@ pub fn export(image_list: PaintingList<ImageData>, export_path: &str) {
 
 /*
 
-This creates previews of all images in a Vec<ImageData>
+This creates Base64 previews of all images in a Vec<ImageData> for a local Tauri application.
 
 Process:
 
 Init:
  - Take in &Vec<ImageData>
- - Process the 5 views of the image as defined in image_size.rs
-    - Square
-    - Wide
-    - LongRectangle
-    - Tall
-    - TallRectangle
- - Return a Vec<String>, where the String is the absolute name of the filepath to the image.
-
- ? Consider makign it return a Base64 String insetad so it is immediately readable by frontend HTML?
+Process:
+ - For each image, write its PNG data to an in-memory buffer.
+ - Encode the buffered data into a Base64 string.
+ - Format the string as a "Data URI" (e.g., "data:image/png;base64,...").
+ - Return a Vec<String> of these Data URIs, which can be used directly in <img> src attributes.
 
 */
-pub fn save_previews(image_list: &Vec<ImageData>, dir: &str) -> Vec<String> {
-    let mut saved_paths = Vec::new(); // Create a vector to store the paths
+pub fn generate_base64_previews(image_list: &Vec<ImageData>) -> Vec<String> {
+    let mut base64_images = Vec::new(); // Create a vector to store the Base64 strings
 
     for image in image_list {
         let preview_image = image.get_image();
-        let file_path_str = format!("{}/{}.png", dir, image.filename.as_ref().unwrap());
+        let mut image_buffer: Vec<u8> = Vec::new();
+
+        // Write the image's PNG data into our in-memory buffer
+        preview_image.write_to(
+            &mut Cursor::new(&mut image_buffer),
+            ImageFormat::Png,
+        ).expect("Failed to write image to buffer");
         
-        preview_image.save(&file_path_str).expect("This shouldn't fail");
+        // Encode the binary data into a Base64 string
+        let base64_string = general_purpose::STANDARD.encode(&image_buffer);
         
-        saved_paths.push(file_path_str); // Add the new path to our vector
+        // Format the string as a Data URI and add it to our vector
+        base64_images.push(format!("data:image/png;base64,{}", base64_string));
     }
 
-    saved_paths // Return the list of paths
+    base64_images // Return the list of Data URIs
 }
