@@ -20,6 +20,7 @@ After:
 */
 #[tauri::command]
 pub async fn open_and_process_images(state: State<'_, Mutex<AppState>>) -> Result<Vec<String>, String> {
+    println!("[COMMAND] open_and_process_images received commands.rs");
     let files = rfd::AsyncFileDialog::new()
         .set_title("Choose Images...")
         .add_filter("Image Files", &["png", "jpg", "jpeg"])
@@ -59,6 +60,7 @@ Ran whenever a photo in the GUI is deselected. Also allow for updating the photo
 */
 #[tauri::command]
 pub fn set_selected(group_index: usize, crop_index: usize, selected: bool, state: State<'_, Mutex<AppState>>) {
+    println!("[COMMAND] set_selected received commands.rs");
     let mut app_state = state.lock().unwrap();
     // Safely get the group, then the crop, and update its `selected` field
     if let Some(group) = app_state.image_groups.get_mut(group_index) {
@@ -75,6 +77,7 @@ pub fn update_row_metadata(
     artist: String, 
     state: State<'_, Mutex<AppState>>
 ) {
+    println!("[COMMAND] update_row_metadata received commands.rs");
     let mut app_state = state.lock().unwrap();
 
     // Safely get the correct group and update its name and artist fields
@@ -92,6 +95,7 @@ pub fn update_pack_metadata(
     description: String,
     state: State<'_, Mutex<AppState>>
 ) {
+    println!("[COMMAND] update_pack_metadata received commands.rs");
     let mut app_state = state.lock().unwrap();
 
     let pack_metadata = &mut app_state.pack_metadata;
@@ -115,6 +119,7 @@ After:
 */
 #[tauri::command]
 pub async fn export_pack(export_path: String, state: State<'_, Mutex<AppState>>) -> Result<(), String> {
+    println!("[COMMAND] export_pack received commands.rs");
     let app_state = state.lock().unwrap();
 
     // 1. Create the final list for export, starting with global metadata

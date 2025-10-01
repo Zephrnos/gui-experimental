@@ -3,16 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic Image Grid: 5 Columns (Metadata Per Row)</title>
+    <title>Painting Pack Creator</title>
     <script src="https://unpkg.com/@tauri-apps/api/dist/index.iife.js"></script>
     <script src="https://unpkg.com/@tauri-apps/api/dist/dialog.iife.js"></script>
 
     <style>
         /* General body styling */
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f0f8ff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+            margin: 0;
+            background-color: #f4f7fa;
+            color: #333;
+        }
+
+        /* Welcome screen styling */
+        #welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+            color: #777;
+        }
+        #welcome-screen h2 {
+            font-size: 2em;
+            font-weight: 500;
+            color: #555;
+        }
+        #welcome-screen p {
+            font-size: 1.2em;
+        }
+
+        /* Main content styling */
+        #main-content {
+            padding: 20px;
         }
 
         /* GLOBAL METADATA STYLING */
@@ -21,7 +46,7 @@
             flex-wrap: wrap;
             gap: 15px;
             padding: 15px;
-            margin-bottom: 30px; /* Increased separation */
+            margin-bottom: 30px;
             border: 1px solid #ccc;
             border-radius: 8px;
             background-color: #ffffff;
@@ -41,7 +66,7 @@
             box-sizing: border-box;
         }
         
-        /* ROW METADATA STYLING (New Section) */
+        /* ROW METADATA STYLING */
         .row-metadata {
             display: flex;
             flex-wrap: wrap;
@@ -59,7 +84,7 @@
             font-size: 0.9em;
         }
 
-        /* 1. Style for the main container (The entire grid and row structure) */
+        /* 1. Style for the main container */
         .grid-container {
             max-width: 1200px; 
             margin: 20px auto; 
@@ -70,10 +95,9 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
-        /* CONTAINER FOR 5 IMAGES IN A ROW (New Section) */
+        /* CONTAINER FOR 5 IMAGES IN A ROW */
         .image-row-wrapper {
             display: grid; 
-            /* Defines 5 equal columns (1fr each) */
             grid-template-columns: repeat(5, 1fr);
             gap: 10px; 
             padding-bottom: 20px;
@@ -88,24 +112,20 @@
             position: relative;
             cursor: pointer; 
             transition: border-color 0.2s, background-color 0.2s; 
-            
-            /* Enforce Square aspect ratio for clean grid layout */
             aspect-ratio: 1 / 1; 
         }
         
         /* 3. Style for the actual image */
         .grid-item img {
             width: 100%;
-            height: 100%; /* Fill the square cell */
-            padding: 10px; /* Padding for visual separation inside the cell */
-            /* Scale image to fit completely within the box */
+            height: 100%;
+            padding: 10px;
             object-fit: contain; 
             border-radius: 4px;
+            box-sizing: border-box;
         }
 
-        /* Removed: .info-box and its related input styling, as they are now per-row */
-
-        /* 4. Checkmark Styling (remains the same) */
+        /* 4. Checkmark Styling */
         .checkmark {
             position: absolute;
             top: 5px;
@@ -125,13 +145,13 @@
             font-weight: bold;
         }
         
-        /* 5. VISUAL FEEDBACK: Style when the item is selected (remains the same) */
+        /* 5. VISUAL FEEDBACK: Style when the item is selected */
         .grid-item.selected {
             border-color: #10b981; 
             background-color: #ccffeb; 
         }
 
-        /* 6. SHOW the checkmark when the parent item is selected (remains the same) */
+        /* 6. SHOW the checkmark when the parent item is selected */
         .grid-item.selected .checkmark {
             display: flex; 
         }
@@ -139,7 +159,6 @@
         /* Media Query for Responsiveness */
         @media (max-width: 768px) {
              .image-row-wrapper {
-                /* On smaller screens, revert to 2 columns */
                 grid-template-columns: repeat(2, 1fr);
             }
         }
@@ -148,141 +167,105 @@
 
 <body>
 
-    <h1>5-Column Image Grid Example (Development Mock)</h1>
-    <p>
-        The images are loaded via a Base64 mock. The "Name" and "Artist" fields are now shared by the entire row of 5 images. Click any image to select/deselect it.
-    </p>
-
-    <!-- GLOBAL METADATA FIELDS -->
-    <div id="global-metadata">
-        <input type="text" id="globalVersion" placeholder="Version (e.g., v1.0.1)">
-        <input type="text" id="globalDescription" placeholder="Project Description">
-        <input type="text" id="globalId" placeholder="Unique ID">
-        <input type="text" id="globalPackName" placeholder="Pack Name">
-    </div>
-    <!-- END GLOBAL METADATA FIELDS -->
-
-    <div class="grid-container" id="dynamicGrid">
-        <!-- Content will be injected here per row -->
+    <div id="welcome-screen">
+        <h2>Painting Pack Creator</h2>
+        <p>Import images to begin using <strong>File > Open Image(s)</strong></p>
     </div>
 
-    <script>
-        const PLACEHOLD_URL_BASE = "https://placehold.co/";
+    <div id="main-content" style="display: none;">
+        <div id="global-metadata">
+            <input type="text" id="globalPackName" placeholder="Pack Name">
+            <input type="text" id="globalVersion" placeholder="Version (e.g., 1.0.0)">
+            <input type="text" id="globalId" placeholder="Unique ID (Auto-generated)">
+            <input type="text" id="globalDescription" placeholder="Pack Description">
+        </div>
 
-        // Map your size types to specific placeholder dimensions for visual demonstration
-        const IMAGE_MAPPING = {
-            "Square": "400x400/3B82F6/ffffff?text=Square",
-            "Wide": "800x450/10B981/ffffff?text=Wide",
-            "LongRectangle": "200x600/EF4444/ffffff?text=Long+Rect",
-            "Tall": "400x600/F59E0B/ffffff?text=Tall",
-            "TallRectangle": "150x500/8B5CF6/ffffff?text=Tall+Rect",
+        <div class="grid-container" id="dynamicGrid">
+            </div>
+    </div>
+
+<script>
+    const { invoke } = window.__TAURI__.core;
+    const { listen } = window.__TAURI__.event;
+    const { save } = window.__TAURI_PLUGIN_DIALOG__;
+
+    const welcomeScreen = document.getElementById('welcome-screen');
+    const mainContent = document.getElementById('main-content');
+    const gridContainer = document.getElementById('dynamicGrid');
+
+    // --- DEBOUNCE UTILITY ---
+    function debounce(func, delay = 300) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), delay);
         };
+    }
+    
+    // (The renderImageGrid function remains the same as before)
+    function renderImageGrid(base64Images) {
+        // ... function content ...
+    }
 
-        /**
-         * MOCK FUNCTION: Simulates returning a Base64 string.
-         */
-        function getMockDataUrl(item) {
-            const sizeKey = item.size;
-            let placeholderTemplate = IMAGE_MAPPING[sizeKey] || "400x400/AAAAAA/000000?text=Unknown";
+    // --- GLOBAL EVENT LISTENERS ---
+
+    // Listen for the 'Open' menu item
+    listen('menu:open_file', async () => {
+        // THIS IS THE KEY LOGGING STEP
+        console.log("JavaScript received 'menu:open_file' event. Invoking Rust command...");
+        try {
+            const base64Images = await invoke('open_and_process_images');
+            console.log("Rust command 'open_and_process_images' finished successfully.");
             
-            // Customize text to include the description for uniqueness in the grid
-            return PLACEHOLD_URL_BASE + placeholderTemplate.replace(/\?text=([^&]*)/, `?text=$1+${item.description.slice(-1)}`);
-        }
-
-
-        // 1. New data source structure: organized into rows, with shared metadata
-        const imageRowsData = [
-            {
-                rowName: "Pack 1: Crimson Art",
-                rowArtist: "Alex Lee",
-                images: [
-                    { path: "test_images/square_image.jpg", size: "Square", description: "Image 1" },
-                    { path: "test_images/wide_image.jpg", size: "Wide", description: "Image 2" },
-                    { path: "test_images/long_rectangle.jpg", size: "LongRectangle", description: "Image 3" },
-                    { path: "test_images/tall_image.jpg", size: "Tall", description: "Image 4" },
-                    { path: "test_images/taller_rect.jpg", size: "TallRectangle", description: "Image 5" },
-                ]
-            },
-            {
-                rowName: "Pack 2: Blue Abstracts",
-                rowArtist: "Fiona G. & Team",
-                images: [
-                    { path: "test_images/square_2.jpg", size: "Square", description: "Image 6" },
-                    { path: "test_images/wide_2.jpg", size: "Wide", description: "Image 7" },
-                    { path: "test_images/long_2.jpg", size: "LongRectangle", description: "Image 8" },
-                    { path: "test_images/tall_2.jpg", size: "Tall", description: "Image 9" },
-                    { path: "test_images/taller_2.jpg", size: "TallRectangle", description: "Image 10" },
-                ]
+            if (base64Images && base64Images.length > 0) {
+                welcomeScreen.style.display = 'none';
+                mainContent.style.display = 'block';
+                renderImageGrid(base64Images);
             }
-        ];
-
-        // 2. Get the empty container element from the HTML
-        const gridContainer = document.getElementById('dynamicGrid');
-
-        // 3. Loop through the row data array to generate sections
-        imageRowsData.forEach((rowData, rowIndex) => {
-            // --- A. Create the Row Metadata Inputs ---
-            const metadataDiv = document.createElement('div');
-            metadataDiv.classList.add('row-metadata');
-
-            // Name Input (per row)
-            const nameInput = document.createElement('input');
-            nameInput.type = 'text';
-            nameInput.placeholder = 'Row Name';
-            nameInput.value = rowData.rowName || '';
-            nameInput.title = 'Row Name';
-
-            // Artist Input (per row)
-            const artistInput = document.createElement('input');
-            artistInput.type = 'text';
-            artistInput.placeholder = 'Row Artist';
-            artistInput.value = rowData.rowArtist || '';
-            artistInput.title = 'Row Artist';
-
-            metadataDiv.appendChild(nameInput);
-            metadataDiv.appendChild(artistInput);
-            
-            gridContainer.appendChild(metadataDiv);
-
-
-            // --- B. Create the 5-Column Grid for Images ---
-            const imageWrapper = document.createElement('div');
-            imageWrapper.classList.add('image-row-wrapper');
-            
-            // Loop through the 5 images in the current row
-            rowData.images.forEach((item, imageIndex) => {
-                // Create the grid cell (the container)
-                const cell = document.createElement('div');
-                cell.classList.add('grid-item');
-                
-                // Create the actual image element
-                const img = document.createElement('img');
-                img.src = getMockDataUrl(item); 
-                img.alt = `Image ${rowIndex * 5 + imageIndex + 1} from path: ${item.path}`; 
-                
-                // Create the checkmark element
-                const checkmark = document.createElement('div');
-                checkmark.classList.add('checkmark');
-                checkmark.innerHTML = '&#10003;'; // Unicode checkmark symbol (✓)
-                
-                // *** INTERACTION LOGIC ***
-                cell.addEventListener('click', () => {
-                    // Toggle the 'selected' class on the cell
-                    const isSelected = cell.classList.toggle('selected');
-                    
-                    // Log the state 
-                    console.log(`Image ${rowIndex * 5 + imageIndex + 1} is now ${isSelected ? 'SELECTED' : 'DESELECTED'}.`);
-                });
-
-                // Append elements
-                cell.appendChild(img);
-                cell.appendChild(checkmark);
-                imageWrapper.appendChild(cell);
+        } catch (error) {
+            // This will show any errors from the Rust command
+            console.error("Error invoking 'open_and_process_images':", error);
+        }
+    });
+    
+    // Listen for the 'Export' menu item
+    listen('menu:export_pack', async () => {
+        // THIS IS THE KEY LOGGING STEP
+        console.log("JavaScript received 'menu:export_pack' event. Invoking Rust command...");
+        try {
+            const exportPath = await save({
+                title: "Save Painting Pack",
             });
-            
-            gridContainer.appendChild(imageWrapper);
+
+            if (exportPath) {
+                await invoke('export_pack', { exportPath });
+                console.log("Rust command 'export_pack' finished successfully.");
+                alert('Pack exported successfully!');
+            }
+        } catch (error) {
+            // This will show any errors from the Rust command
+            console.error("Error invoking 'export_pack':", error);
+            alert(`Failed to export pack: ${error}`);
+        }
+    });
+
+    // Debounced function to update global pack metadata in the backend
+    const debouncedUpdatePack = debounce(() => {
+        console.log("JavaScript invoking 'update_pack_metadata'");
+        invoke('update_pack_metadata', {
+            packName: document.getElementById('globalPackName').value,
+            version: document.getElementById('globalVersion').value,
+            id: document.getElementById('globalId').value,
+            description: document.getElementById('globalDescription').value
         });
-    </script>
+    });
+    
+    // Add event listeners to all global metadata fields
+    document.getElementById('global-metadata').querySelectorAll('input').forEach(input => {
+        input.addEventListener('input', debouncedUpdatePack);
+    });
+
+</script>
 
 </body>
 </html>
