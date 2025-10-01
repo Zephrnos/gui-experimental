@@ -3,28 +3,18 @@ use std::{fs};
 
 use crate::core::{cropper, exporter};
 
-#[tauri::command]
-pub async fn generate_previews(app: AppHandle, source_path: String) -> Result<Vec<String>, String> {
-    // 1. Get the path to the app's local data directory
-    let app_data_dir = app.path()
-        .app_data_dir()
-        .or_else(|_| Err("Failed to get app data directory.".to_string()))?;
+/*
 
-    // 2. Create a dedicated, unique folder for these previews to avoid conflicts
-    let preview_dir = app_data_dir.join("previews");
-    fs::create_dir_all(&preview_dir)
-        .map_err(|e| format!("Failed to create preview directory: {}", e))?;
+First command run when window is opened. 
 
-    // 3. Call your existing image cropping logic
-    let image_data_vec = cropper::crop_preview(source_path);
+Init:
+ - Open a file explorer window
+ - Get filepaths of images we want to work with
+ - Returns strings of the filepaths
+After:
+ - Pass filepaths along to a preview generator [something along the likes of generate_previews()]
 
-    // 4. Call your modified save function
-    let saved_base64_strings = exporter::generate_base64_previews(&image_data_vec);
-
-    // 5. Return the list of file paths to the frontend
-    Ok(saved_base64_strings)
-}
-
+*/
 #[tauri::command]
 pub async fn open_file() -> Option<Vec<String>> {
     // Use the `rfd` crate to open an async file dialog that allows multiple selections
@@ -42,7 +32,38 @@ pub async fn open_file() -> Option<Vec<String>> {
     })
 }
 
+/*
 
+Second command run when a window is opened
+
+Init:
+ - Takes in a single string [a single image gets all its previews generated in one go]
+After:
+ - Returns a Vec<String>, where all teh strings are base64 encodings of the image crops
+
+*/
+#[tauri::command]
+pub fn generate_previews(source_path: String) -> Result<Vec<String>, String> {
+    // 1. Call your existing image cropping logic
+    let image_data_vec = cropper::crop_preview(&source_path);
+
+    // 2. Call your function to generate Base64 strings in memory
+    let saved_base64_strings = exporter::generate_base64_previews(&image_data_vec);
+
+    // 3. Return the list of Base64 strings to the frontend
+    Ok(saved_base64_strings)
+}
+
+/*
+
+Final command called when window is opened
+
+Init:
+ - Takes in an export path
+After: 
+ - Writes all the images to the export directory with given data, and closes program
+
+*/
 #[tauri::command]
 pub async fn export_pack(export_path: String) {
 

@@ -91,6 +91,7 @@ Process:
  - For each image, write its PNG data to an in-memory buffer.
  - Encode the buffered data into a Base64 string.
  - Format the string as a "Data URI" (e.g., "data:image/png;base64,...").
+After:
  - Return a Vec<String> of these Data URIs, which can be used directly in <img> src attributes.
 
 */

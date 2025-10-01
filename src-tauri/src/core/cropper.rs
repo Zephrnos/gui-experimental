@@ -39,7 +39,7 @@ PaintingList<ImageData>
 has a Vec<ImageData> of images to process and draw previews from
 
 */
-pub fn crop_preview(path: String) -> Vec<ImageData> {
+pub fn crop_preview(path: &str) -> Vec<ImageData> {
 
     let mut previews: Vec<ImageData> = Vec::new();
     let img = open(path).expect("This was not intended to fail");
