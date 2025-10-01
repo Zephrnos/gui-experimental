@@ -22,6 +22,7 @@ pub fn run() {
     })
     // REGISTER all your commands
     .invoke_handler(tauri::generate_handler![
+      commands::my_custom_command,
       commands::open_and_process_images,
       commands::set_selected,
       commands::update_row_metadata,

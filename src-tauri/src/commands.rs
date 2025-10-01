@@ -7,6 +7,14 @@ use crate::{
 };
 
 /*
+Test Command
+ */
+#[tauri::command]
+pub fn my_custom_command() {
+  println!("I was invoked from JavaScript!");
+}
+
+/*
 
 First command run when window is opened. 
 
