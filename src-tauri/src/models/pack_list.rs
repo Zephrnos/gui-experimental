@@ -1,8 +1,12 @@
 use serde::Serialize;
 use rand::Rng;
 
+use crate::models::image_data::ImageData;
+
 #[derive(Serialize, Debug)]
-pub struct PaintingList<T> {
+pub struct PackList<T> {
+    #[serde(skip)]
+    pub pack_name: String,
     #[serde(rename = "$schema")]
     pub schema: String,
     pub version: String, 
@@ -11,14 +15,15 @@ pub struct PaintingList<T> {
     paintings: Vec<T>,
 }
 
-impl<T> Default for PaintingList<T> {
+impl<T> Default for PackList<T> {
     fn default() -> Self {
 
         let mut rng = rand::rng();
         let random_int: i32 = rng.random_range(56000..=128000);
         let random_id = format!("{}", random_int);
         
-        PaintingList {
+        PackList {
+            pack_name: String::from("Default"),
             schema: String::from("http://json-schema.org/draft-07/schema#"),
             version: String::from("1.0.0"),
             id: random_id, 
@@ -36,7 +41,7 @@ fn check_no_input(input: String) -> Option<String> {
     }
 }
 
-impl<T> PaintingList<T> {
+impl<T> PackList<T> {
 
     pub fn set_schema(&mut self, schema: String) {
         match check_no_input(schema) {
@@ -70,11 +75,12 @@ impl<T> PaintingList<T> {
         self.paintings.push(painting);
     }
 
-    pub fn separate_paintings<U>(self) -> (PaintingList<U>, Vec<T>) {
+    pub fn separate_paintings<U>(self) -> (PackList<U>, Vec<T>) {
         
         // 1. Create the new struct with a new, empty `paintings` vector.
         //    This moves all the metadata fields (schema, id, etc.).
-        let new_list = PaintingList {
+        let new_list = PackList {
+            pack_name: self.pack_name,
             schema: self.schema,
             version: self.version,
             id: self.id,
@@ -89,4 +95,12 @@ impl<T> PaintingList<T> {
         // 3. Return both new pieces as a tuple.
         (new_list, original_paintings)
     }
+}
+
+impl PackList<ImageData> {
+    
+    pub fn set_selected(&mut self, index: usize, selected: bool) {
+        self.paintings[index].set_selected(selected);
+    }
+
 }

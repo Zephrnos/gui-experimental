@@ -1,8 +1,9 @@
 use std::sync::Mutex;
-
 use tauri::State;
-
-use crate::{app_state::AppState, core::{cropper, exporter}};
+use crate::{
+    app_state::{AppState, SourceImageGroup}, 
+    core::{cropper, exporter}
+};
 
 /*
 
@@ -17,45 +18,38 @@ After:
 
 */
 #[tauri::command]
-pub async fn open_file() -> Option<Vec<String>> {
-    // Use the `rfd` crate to open an async file dialog that allows multiple selections
+pub async fn open_and_process_images(state: State<'_, Mutex<AppState>>) -> Result<Vec<String>, String> {
     let files = rfd::AsyncFileDialog::new()
-        .set_title("Choose files...")
-        .pick_files() // Changed from .pick_file() to .pick_files()
+        .set_title("Choose Images...")
+        .add_filter("Image Files", &["png", "jpg", "jpeg"])
+        .pick_files()
         .await;
 
-    // The dialog returns an `Option<Vec<FileHandle>>`. We'll convert it to an `Option<Vec<String>>`.
-    files.map(|vec_of_handles| {
-        vec_of_handles
-            .into_iter()
-            .map(|handle| handle.path().to_string_lossy().to_string())
-            .collect()
-    })
-}
+    if let Some(file_handles) = files {
+        let paths: Vec<String> = file_handles.into_iter().map(|h| h.path().to_string_lossy().to_string()).collect();
+        let mut all_previews = Vec::new();
+        let mut app_state = state.lock().unwrap();
 
-/*
+        for path_str in paths {
+            let image_data_vec = cropper::crop_preview(&path_str);
+            let previews = exporter::generate_base64_previews(&image_data_vec);
+            all_previews.extend(previews);
 
-Second command run when a window is opened
+            // Create a single group for this source image and its crops
+            let group = SourceImageGroup {
+                source_path: path_str.clone(),
+                name: std::path::Path::new(&path_str).file_stem().unwrap_or_default().to_string_lossy().to_string(),
+                artist: String::from("Artist Name"),
+                crops: image_data_vec,
+            };
 
-Init:
- - Takes in a Mutex Lock of our AppState so we can save all the image previews as ImageData objects
- - Takes in a single string [a single image gets all its previews generated in one go]
-After:
- - Returns a Vec<String>, where all the strings are base64 encodings of the image crops
-
-*/
-#[tauri::command]
-pub fn generate_previews(source_path: String, state: State<Mutex<AppState>>) -> Result<Vec<String>, String> {
-    // 1. Call your existing image cropping logic
-    let image_data_vec = cropper::crop_preview(&source_path);
-
-    todo!(); // todo: make sure to write the Vec<ImageData> to the shared state
-
-    // 2. Call your function to generate Base64 strings in memory
-    let saved_base64_strings = exporter::generate_base64_previews(&image_data_vec);
-
-    // 3. Return the list of Base64 strings to the frontend
-    Ok(saved_base64_strings)
+            // Add the entire group to the state
+            app_state.image_groups.push(group);
+        }
+        Ok(all_previews)
+    } else {
+        Ok(Vec::new())
+    }
 }
 
 /*
@@ -64,7 +58,34 @@ Ran whenever a photo in the GUI is deselected. Also allow for updating the photo
 
 */
 #[tauri::command]
-pub async fn set_selected(selected: bool) {
+pub fn set_selected(group_index: usize, crop_index: usize, selected: bool, state: State<'_, Mutex<AppState>>) {
+    let mut app_state = state.lock().unwrap();
+    // Safely get the group, then the crop, and update its `selected` field
+    if let Some(group) = app_state.image_groups.get_mut(group_index) {
+        if let Some(crop) = group.crops.get_mut(crop_index) {
+            crop.selected = selected;
+        }
+    }
+}
+
+#[tauri::command]
+pub fn update_row_metadata(
+    group_index: usize, 
+    name: String, 
+    artist: String, 
+    state: State<'_, Mutex<AppState>>
+) {
+    let mut app_state = state.lock().unwrap();
+
+    // Safely get the correct group and update its name and artist fields
+    if let Some(group) = app_state.image_groups.get_mut(group_index) {
+        group.name = name;
+        group.artist = artist;
+    }
+}
+
+#[tauri::command]
+pub fn update_pack_metadata() {
 
 }
 
@@ -80,5 +101,5 @@ After:
 */
 #[tauri::command]
 pub async fn export_pack(export_path: String) {
-
+    todo!()
 }

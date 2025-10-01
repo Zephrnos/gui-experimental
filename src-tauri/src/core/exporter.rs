@@ -3,7 +3,7 @@ use image::{DynamicImage, ImageFormat};
 use serde::Serialize;
 use std::io::Cursor;
 use base64::{Engine as _, engine::general_purpose};
-use crate::models::painting_list::PaintingList;
+use crate::models::pack_list::PackList;
 use crate::models::image_data::ImageData;
 
 // Load in the default icon to bianary so the file is contained in the executable
@@ -24,12 +24,12 @@ fn write_icon(export_path: &str) {
     write(format!("{}/icon.png", export_path), DEFAULT_ICON).expect("Failed to write default icon");
 }
 
-fn write_json (painting_list: &PaintingList<Painting>, export_path: &str) {
+fn write_json (painting_list: &PackList<Painting>, export_path: &str) {
     let json_data = serde_json::to_string_pretty(painting_list).expect("Failed to serialize painting list");
     write(format!("{}/custompaintings.json", export_path), json_data).expect("Failed to write painting list JSON file");
 }
 
-fn write_images(painting_list: &mut PaintingList<Painting>, image_list: Vec<ImageData>, export_path: &str) {
+fn write_images(painting_list: &mut PackList<Painting>, image_list: Vec<ImageData>, export_path: &str) {
     
     for image in image_list {
 
@@ -65,9 +65,9 @@ fn write_images(painting_list: &mut PaintingList<Painting>, image_list: Vec<Imag
 This is a final export call to take all the files that we want and write them to a directory of our choice
 
 */
-pub fn export(image_list: PaintingList<ImageData>, export_path: &str) {
+pub fn export(image_list: PackList<ImageData>, export_path: &str) {
     
-    let (mut painting_list, image_data): (PaintingList<Painting>, Vec<ImageData>) =
+    let (mut painting_list, image_data): (PackList<Painting>, Vec<ImageData>) =
         image_list.separate_paintings();
 
     write_images(&mut painting_list, image_data, export_path);
