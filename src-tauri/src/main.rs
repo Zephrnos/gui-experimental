@@ -1,21 +1,38 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod app_state;
+mod commands;
+mod core;
+mod models;
+
+use app_state::AppState;
+use std::sync::Mutex;
 use tauri::menu::{MenuBuilder, MenuItemBuilder, SubmenuBuilder};
-use tauri::App;
+use tauri::{App, Emitter}; // Add Manager
 
 fn main() {
     tauri::Builder::default()
+        // --- 2. MANAGE your AppState ---
+        .manage(Mutex::new(AppState::default()))
+        // --- 3. REGISTER your commands ---
+        .invoke_handler(tauri::generate_handler![
+            commands::open_and_process_images,
+            commands::set_selected,
+            commands::update_row_metadata,
+            commands::update_pack_metadata,
+            commands::export_pack
+        ])
         .setup(|app| {
             build_menu(app)?;
             Ok(())
         })
-        .on_menu_event(|_app_handle, event| {
+        // --- 4. EMIT events from your menu ---
+        .on_menu_event(|app_handle, event| {
             match event.id().as_ref() {
-              "quit" => {std::process::exit(0);}
-              "open_file" => {}
-              "export_pack" => {}
-              "import_pack" => {}
-              _ => {}
+                "quit" => { std::process::exit(0); }
+                "open_file" => { app_handle.emit("menu:open_file", ()).unwrap(); }
+                "export_pack" => { app_handle.emit("menu:export_pack", ()).unwrap(); }
+                _ => {}
             }
         })
         .run(tauri::generate_context!())

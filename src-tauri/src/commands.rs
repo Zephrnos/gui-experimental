@@ -2,7 +2,8 @@ use std::sync::Mutex;
 use tauri::State;
 use crate::{
     app_state::{AppState, SourceImageGroup}, 
-    core::{cropper, exporter}
+    core::{cropper, exporter},
+    models::{pack_list::PackList}
 };
 
 /*
@@ -37,7 +38,6 @@ pub async fn open_and_process_images(state: State<'_, Mutex<AppState>>) -> Resul
 
             // Create a single group for this source image and its crops
             let group = SourceImageGroup {
-                source_path: path_str.clone(),
                 name: std::path::Path::new(&path_str).file_stem().unwrap_or_default().to_string_lossy().to_string(),
                 artist: String::from("Artist Name"),
                 crops: image_data_vec,
@@ -86,20 +86,20 @@ pub fn update_row_metadata(
 
 #[tauri::command]
 pub fn update_pack_metadata(
-    pack_name: &str,
-    version: &str,
-    id: &str,
-    description: &str,
+    pack_name: String,
+    version: String,
+    id: String,
+    description: String,
     state: State<'_, Mutex<AppState>>
 ) {
     let mut app_state = state.lock().unwrap();
 
     let pack_metadata = &mut app_state.pack_metadata;
 
-    pack_metadata.set_pack_name(pack_name);
-    pack_metadata.set_version(version);
-    pack_metadata.set_id(id);
-    pack_metadata.set_description(description);
+    pack_metadata.set_pack_name(&pack_name);
+    pack_metadata.set_version(&version);
+    pack_metadata.set_id(&id);
+    pack_metadata.set_description(&description);
 
 }
 
@@ -114,6 +114,31 @@ After:
 
 */
 #[tauri::command]
-pub async fn export_pack(export_path: String) {
-    todo!()
+pub async fn export_pack(export_path: String, state: State<'_, Mutex<AppState>>) -> Result<(), String> {
+    let app_state = state.lock().unwrap();
+
+    // 1. Create the final list for export, starting with global metadata
+    let mut final_list = PackList::new(
+        app_state.pack_metadata.pack_name.clone(),
+        app_state.pack_metadata.version.clone(),
+        app_state.pack_metadata.id.clone(),
+        app_state.pack_metadata.description.clone(),
+    );
+
+    // 2. Iterate through the groups and add only the selected crops
+    for group in &app_state.image_groups {
+        for crop in &group.crops {
+            if crop.selected { // Check if the crop is selected
+                let mut export_crop = crop.clone();
+                // Assign the shared metadata from the group to the individual crop
+                export_crop.name = Some(group.name.clone());
+                export_crop.artist = Some(group.artist.clone());
+                final_list.add_painting(export_crop);
+            }
+        }
+    }
+
+    // 3. Call the exporter with the fully prepared list
+    exporter::export(final_list, &export_path);
+    Ok(())
 }

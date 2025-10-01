@@ -1,8 +1,6 @@
 use serde::Serialize;
 use rand::Rng;
 
-use crate::models::image_data::ImageData;
-
 #[derive(Serialize, Debug)]
 pub struct PackList<T> {
     #[serde(skip)]
@@ -43,6 +41,17 @@ fn check_no_input(input: &str) -> Option<String> {
 
 impl<T> PackList<T> {
 
+    pub fn new(pack_name: String, version: String, id: String, description: String) -> Self {
+        PackList {
+            pack_name,
+            schema: String::from("http://json-schema.org/draft-07/schema#"),
+            version,
+            id,
+            description,
+            paintings: Vec::new(),
+        }
+    }
+
     pub fn set_pack_name(&mut self, pack_name: &str) {
         match check_no_input(pack_name) {
             Some(valid_pack_name) => self.pack_name = valid_pack_name,
@@ -50,7 +59,8 @@ impl<T> PackList<T> {
         }
     }
 
-    pub fn set_schema(&mut self, schema: &str) {
+    // unused, nobody is setting a schema round these parts
+    pub fn _set_schema(&mut self, schema: &str) {
         match check_no_input(schema) {
             Some(valid_schema) => self.schema = valid_schema,
             None => {},
@@ -102,12 +112,4 @@ impl<T> PackList<T> {
         // 3. Return both new pieces as a tuple.
         (new_list, original_paintings)
     }
-}
-
-impl PackList<ImageData> {
-    
-    pub fn set_selected(&mut self, index: usize, selected: bool) {
-        self.paintings[index].set_selected(selected);
-    }
-
 }

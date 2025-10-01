@@ -19,6 +19,45 @@ struct Painting {
     height:     u32
 }
 
+/*
+
+This creates Base64 previews of all images in a Vec<ImageData> for a local Tauri application.
+
+Process:
+
+Init:
+ - Take in &Vec<ImageData>
+Process:
+ - For each image, write its PNG data to an in-memory buffer.
+ - Encode the buffered data into a Base64 string.
+ - Format the string as a "Data URI" (e.g., "data:image/png;base64,...").
+After:
+ - Return a Vec<String> of these Data URIs, which can be used directly in <img> src attributes.
+
+*/
+pub fn generate_base64_previews(image_list: &Vec<ImageData>) -> Vec<String> {
+    let mut base64_images = Vec::new(); // Create a vector to store the Base64 strings
+
+    for image in image_list {
+        let preview_image = image.get_image();
+        let mut image_buffer: Vec<u8> = Vec::new();
+
+        // Write the image's PNG data into our in-memory buffer
+        preview_image.write_to(
+            &mut Cursor::new(&mut image_buffer),
+            ImageFormat::Png,
+        ).expect("Failed to write image to buffer");
+        
+        // Encode the binary data into a Base64 string
+        let base64_string = general_purpose::STANDARD.encode(&image_buffer);
+        
+        // Format the string as a Data URI and add it to our vector
+        base64_images.push(format!("data:image/png;base64,{}", base64_string));
+    }
+
+    base64_images // Return the list of Data URIs
+}
+
 fn write_icon(export_path: &str) {
     create_dir_all(format!("{}/images", export_path)).expect("Failed to create images directory");
     write(format!("{}/icon.png", export_path), DEFAULT_ICON).expect("Failed to write default icon");
@@ -74,43 +113,4 @@ pub fn export(image_list: PackList<ImageData>, export_path: &str) {
     write_json(&painting_list, export_path);
     write_icon(export_path);
 
-}
-
-/*
-
-This creates Base64 previews of all images in a Vec<ImageData> for a local Tauri application.
-
-Process:
-
-Init:
- - Take in &Vec<ImageData>
-Process:
- - For each image, write its PNG data to an in-memory buffer.
- - Encode the buffered data into a Base64 string.
- - Format the string as a "Data URI" (e.g., "data:image/png;base64,...").
-After:
- - Return a Vec<String> of these Data URIs, which can be used directly in <img> src attributes.
-
-*/
-pub fn generate_base64_previews(image_list: &Vec<ImageData>) -> Vec<String> {
-    let mut base64_images = Vec::new(); // Create a vector to store the Base64 strings
-
-    for image in image_list {
-        let preview_image = image.get_image();
-        let mut image_buffer: Vec<u8> = Vec::new();
-
-        // Write the image's PNG data into our in-memory buffer
-        preview_image.write_to(
-            &mut Cursor::new(&mut image_buffer),
-            ImageFormat::Png,
-        ).expect("Failed to write image to buffer");
-        
-        // Encode the binary data into a Base64 string
-        let base64_string = general_purpose::STANDARD.encode(&image_buffer);
-        
-        // Format the string as a Data URI and add it to our vector
-        base64_images.push(format!("data:image/png;base64,{}", base64_string));
-    }
-
-    base64_images // Return the list of Data URIs
 }

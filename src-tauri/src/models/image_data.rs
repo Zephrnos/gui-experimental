@@ -30,10 +30,6 @@ impl ImageData {
         }
     }
 
-    pub fn set_selected(&mut self, is_selected: bool) {
-        self.selected = is_selected;
-    }
-
     pub fn get_image(&self) -> &DynamicImage {
         &self.image
     }

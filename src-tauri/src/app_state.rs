@@ -4,7 +4,6 @@ use crate::models::{image_data::ImageData, pack_list::PackList};
 /// for one source image and all its generated crops.
 #[derive(Debug, Clone)]
 pub struct SourceImageGroup {
-    pub source_path: String,
     pub name: String,
     pub artist: String,
     pub crops: Vec<ImageData>,
