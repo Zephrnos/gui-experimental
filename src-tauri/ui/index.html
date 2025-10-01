@@ -8,9 +8,11 @@
       const listen = window.__TAURI__.event.listen;
 
       listen('menu:open_and_process_images', (event) => {
-        console.log('Menu event received from Rust!');
-        // 3. Invoke the command as before
         invoke('open_and_process_images');
+      });
+
+      listen('menu:export_pack', (event) => {
+        invoke('export_pack');
       });
 
       // 2. Create a function to call the command

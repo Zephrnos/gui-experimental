@@ -126,32 +126,45 @@ After:
 
 */
 #[tauri::command]
-pub async fn export_pack(export_path: String, state: State<'_, Mutex<AppState>>) -> Result<(), String> {
+pub async fn export_pack(state: State<'_, Mutex<AppState>>) -> Result<(), String> {
     println!("[COMMAND] export_pack received commands.rs");
-    let app_state = state.lock().unwrap();
 
-    // 1. Create the final list for export, starting with global metadata
-    let mut final_list = PackList::new(
-        app_state.pack_metadata.pack_name.clone(),
-        app_state.pack_metadata.version.clone(),
-        app_state.pack_metadata.id.clone(),
-        app_state.pack_metadata.description.clone(),
-    );
+    // 1. Open a native dialog to have the user pick the export directory
+    let folder = rfd::AsyncFileDialog::new()
+        .set_title("Choose Export Directory...")
+        .pick_folder()
+        .await;
 
-    // 2. Iterate through the groups and add only the selected crops
-    for group in &app_state.image_groups {
-        for crop in &group.crops {
-            if crop.selected { // Check if the crop is selected
-                let mut export_crop = crop.clone();
-                // Assign the shared metadata from the group to the individual crop
-                export_crop.name = Some(group.name.clone());
-                export_crop.artist = Some(group.artist.clone());
-                final_list.add_painting(export_crop);
+    // 2. Only proceed if the user selected a folder (didn't cancel)
+    if let Some(folder_handle) = folder {
+        let export_path = folder_handle.path().to_string_lossy().to_string();
+        let app_state = state.lock().unwrap();
+
+        // 3. Create the final list for export, starting with global metadata
+        let mut final_list = PackList::new(
+            app_state.pack_metadata.pack_name.clone(),
+            app_state.pack_metadata.version.clone(),
+            app_state.pack_metadata.id.clone(),
+            app_state.pack_metadata.description.clone(),
+        );
+
+        // 4. Iterate through the groups and add only the selected crops
+        for group in &app_state.image_groups {
+            for crop in &group.crops {
+                if crop.selected { // Check if the crop is selected
+                    let mut export_crop = crop.clone();
+                    // Assign the shared metadata from the group to the individual crop
+                    export_crop.name = Some(group.name.clone());
+                    export_crop.artist = Some(group.artist.clone());
+                    final_list.add_painting(export_crop);
+                }
             }
         }
-    }
 
-    // 3. Call the exporter with the fully prepared list
-    exporter::export(final_list, &export_path);
+        // 5. Call the exporter with the fully prepared list and the chosen path
+        exporter::export(final_list, &export_path);
+    }
+    
+    // If the user cancels the dialog, the function simply finishes without error.
     Ok(())
 }
