@@ -1,5 +1,5 @@
-use tauri::{AppHandle, Manager}; // Make sure Manager is in scope
-use std::fs;
+use tauri::{AppHandle, Manager};
+use std::{fs};
 
 use crate::core::{cropper, exporter};
 
@@ -19,12 +19,10 @@ pub async fn generate_previews(app: AppHandle, source_path: String) -> Result<Ve
     let image_data_vec = cropper::crop_preview(source_path);
 
     // 4. Call your modified save function
-    let saved_file_paths = exporter::generate_base64_previews(
-        &image_data_vec, 
-    );
+    let saved_base64_strings = exporter::generate_base64_previews(&image_data_vec);
 
     // 5. Return the list of file paths to the frontend
-    Ok(saved_file_paths)
+    Ok(saved_base64_strings)
 }
 
 #[tauri::command]
@@ -47,5 +45,5 @@ pub async fn open_file() -> Option<Vec<String>> {
 
 #[tauri::command]
 pub async fn export_pack(export_path: String) {
-  
+
 }
