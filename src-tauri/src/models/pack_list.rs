@@ -3,6 +3,7 @@ use rand::Rng;
 
 #[derive(Serialize, Debug)]
 pub struct PackList<T> {
+    #[serde(rename = "name")]
     pub pack_name: String,
     #[serde(rename = "$schema")]
     pub schema: String,

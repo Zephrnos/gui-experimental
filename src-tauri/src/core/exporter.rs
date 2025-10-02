@@ -68,14 +68,21 @@ fn write_images(painting_list: &mut PackList<Painting>, image_list: Vec<ExportIt
     create_dir_all(&images_dir).expect("Failed to create images directory");
 
     for item in image_list {
-        // Re-create the image from the source path on-demand for export.
-        let painting = cropper::crop_single_image(&item.source_path, &item.data.image_size)
+        // Re-create the image from the source path on-demand for export and make it mutable.
+        let mut painting = cropper::crop_single_image(&item.source_path, &item.data.image_size)
             .expect("Failed to re-crop image for export.");
+
+        if painting.width() > 1024 {
+            painting = painting.thumbnail(1024, u32::MAX);
+        }
 
         for (width, height) in item.data.get_sizes() {
 
-            let id: String = format!("{}_{}x{}", item.data.id.as_ref().unwrap(), &width, &height);
-            let base_filename: String = format!("{}_{}x{}", item.data.filename.as_ref().unwrap(), &width, &height);
+            let sanitized_id = item.data.id.as_ref().unwrap().replace(' ', "_");
+            let sanitized_filename = item.data.filename.as_ref().unwrap().replace(' ', "_");
+
+            let id: String = format!("{}_{}x{}", &sanitized_id, &width, &height);
+            let base_filename: String = format!("{}_{}x{}", &sanitized_filename, &width, &height);
             
             let save_path = format!("{}/{}.png", &images_dir, &base_filename);
             painting.save(save_path).expect("This shouldnt fail");
@@ -106,13 +113,22 @@ pub fn export(
     items_to_export: Vec<ExportItem>,
     export_path: &str,
 ) {
-    let pack_dir = format!("{}/{}", export_path, &pack_name);
+    // --- NEW: Sanitize Pack Name and ID ---
+    // Sanitize the pack name for use in the directory path.
+    let sanitized_pack_name = pack_name.replace(' ', "_");
+    let pack_dir = format!("{}/{}", export_path, &sanitized_pack_name);
 
-    // The PackList for the final JSON is now created here.
+    let sanitized_pack_id: String = id
+        .to_lowercase()
+        .replace(' ', "_")
+        .chars()
+        .filter(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || *c == '_')
+        .collect();
+
     let mut painting_list = PackList::new(
         pack_name,
         version,
-        id,
+        sanitized_pack_id,
         description,
     );
 
