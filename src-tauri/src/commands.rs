@@ -28,13 +28,13 @@ After:
 */
 #[tauri::command]
 pub async fn open_and_process_images(state: State<'_, Mutex<AppState>>) -> Result<Vec<String>, String> {
-    println!("[COMMAND] open_and_process_images received commands.rs");
+    println!("[COMMAND] open_and_process_images command received commands.rs");
     let files = rfd::AsyncFileDialog::new()
         .set_title("Choose Images...")
         .add_filter("Image Files", &["png", "jpg", "jpeg"])
         .pick_files()
         .await;
-
+    println!("[COMMAND] open_and_process_images images received commands.rs");
     if let Some(file_handles) = files {
         let paths: Vec<String> = file_handles.into_iter().map(|h| h.path().to_string_lossy().to_string()).collect();
         let mut all_previews = Vec::new();
@@ -42,9 +42,11 @@ pub async fn open_and_process_images(state: State<'_, Mutex<AppState>>) -> Resul
 
         for path_str in paths {
             let image_data_vec = cropper::crop_preview(&path_str);
+            println!("[COMMAND] open_and_process_images images cropped commands.rs");
             let previews = exporter::generate_base64_previews(&image_data_vec);
             all_previews.extend(previews);
-
+            println!("[COMMAND] open_and_process_images images converted base64 commands.rs");
+            
             // Create a single group for this source image and its crops
             let group = SourceImageGroup {
                 name: std::path::Path::new(&path_str).file_stem().unwrap_or_default().to_string_lossy().to_string(),
@@ -156,6 +158,8 @@ pub async fn export_pack(state: State<'_, Mutex<AppState>>) -> Result<(), String
                     // Assign the shared metadata from the group to the individual crop
                     export_crop.name = Some(group.name.clone());
                     export_crop.artist = Some(group.artist.clone());
+                    export_crop.id = Some(group.name.clone());
+                    export_crop.filename = Some(group.name.clone());
                     final_list.add_painting(export_crop);
                 }
             }

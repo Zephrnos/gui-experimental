@@ -58,18 +58,23 @@ pub fn generate_base64_previews(image_list: &Vec<ImageData>) -> Vec<String> {
     base64_images // Return the list of Data URIs
 }
 
+// In src/core/exporter.rs
+
 fn write_icon(export_path: &str) {
-    create_dir_all(format!("{}/images", export_path)).expect("Failed to create images directory");
     write(format!("{}/icon.png", export_path), DEFAULT_ICON).expect("Failed to write default icon");
 }
-
 fn write_json (painting_list: &PackList<Painting>, export_path: &str) {
     let json_data = serde_json::to_string_pretty(painting_list).expect("Failed to serialize painting list");
     write(format!("{}/custompaintings.json", export_path), json_data).expect("Failed to write painting list JSON file");
 }
 
+// In src/core/exporter.rs
+
 fn write_images(painting_list: &mut PackList<Painting>, image_list: Vec<ImageData>, export_path: &str) {
     
+    let images_dir = format!("{}/images", export_path);
+    create_dir_all(&images_dir).expect("Failed to create images directory");
+
     for image in image_list {
 
         if image.selected {
@@ -79,12 +84,14 @@ fn write_images(painting_list: &mut PackList<Painting>, image_list: Vec<ImageDat
             for (width, height) in image.get_sizes() {
 
                 let id: String = format!("{}_{}x{}", image.id.as_ref().unwrap(), &width, &height);
-                let filename: String = format!("{}_{}x{}", image.filename.as_ref().unwrap(), &width, &height);
-                painting.save(format!("{}/{}.png", export_path, &filename)).expect("This shouldnt fail");
+                let base_filename: String = format!("{}_{}x{}", image.filename.as_ref().unwrap(), &width, &height);
+                
+                let save_path = format!("{}/{}.png", &images_dir, &base_filename);
+                painting.save(save_path).expect("This shouldnt fail");
 
                 let painting: Painting = Painting {
                     id,
-                    filename,
+                    filename: format!("{}.png", base_filename), // FIX: Added .png to the filename for the JSON
                     name: image.name.clone().unwrap(),
                     artist: image.artist.clone().unwrap(), 
                     width: *width, 
@@ -104,13 +111,19 @@ fn write_images(painting_list: &mut PackList<Painting>, image_list: Vec<ImageDat
 This is a final export call to take all the files that we want and write them to a directory of our choice
 
 */
+// In src/core/exporter.rs
+
 pub fn export(image_list: PackList<ImageData>, export_path: &str) {
     
+    // --- THE FIX: Create a new directory with the pack's name ---
+    let pack_dir = format!("{}/{}", export_path, image_list.pack_name);
+    // --- END FIX ---
+
     let (mut painting_list, image_data): (PackList<Painting>, Vec<ImageData>) =
         image_list.separate_paintings();
 
-    write_images(&mut painting_list, image_data, export_path);
-    write_json(&painting_list, export_path);
-    write_icon(export_path);
-
+    // Pass the new `pack_dir` path to the helper functions instead of `export_path`
+    write_images(&mut painting_list, image_data, &pack_dir);
+    write_json(&painting_list, &pack_dir);
+    write_icon(&pack_dir);
 }

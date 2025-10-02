@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Gui Experimental",
-  "version": "0.1.0",
-  "identifier": "com.tauri.dev",
+  "productName": "Minecraft Painting Pack Maker",
+  "version": "1.0.0",
+  "identifier": "com.mc-pack-maker.dev",
   "build": {
     "frontendDist": "./ui"
   },
@@ -10,9 +10,9 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "Gui Experimental",
-        "width": 900,
-        "height": 800,
+        "title": "Minecraft Painting Pack Maker",
+        "width": 1280,
+        "height": 1080,
         "resizable": false,
         "fullscreen": false
       }

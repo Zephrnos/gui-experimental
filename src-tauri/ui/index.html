@@ -1,28 +1,389 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painting Pack Creator</title>
+    <script src="https://unpkg.com/@tauri-apps/api/dist/index.iife.js"></script>
+    <script src="https://unpkg.com/@tauri-apps/api/dist/dialog.iife.js"></script>
+
+    <style>
+        /* --- DARK MODE THEME --- */
+        :root {
+            --bg-primary: #1a1d21;
+            --bg-secondary: #2c313a;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --border-primary: #444952;
+            --border-accent: #007bff;
+            --accent-green: #28a745;
+            --accent-green-bg: #1c4b3a;
+            --accent-blue-bg: #2a3a4a;
+        }
+
+        /* General body styling */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+            margin: 0;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        /* Welcome screen styling */
+        #welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+        #welcome-screen h2 {
+            font-size: 2em;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        #welcome-screen p {
+            font-size: 1.2em;
+        }
+
+        /* Main content styling */
+        #main-content {
+            padding: 20px;
+        }
+
+        /* Input placeholder styling */
+        input::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.7;
+        }
+
+        /* GLOBAL METADATA STYLING */
+        #global-metadata {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 15px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border-primary);
+            border-radius: 8px;
+            background-color: var(--bg-secondary);
+            max-width: 1200px; 
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        #global-metadata input[type="text"] {
+            flex-grow: 1;
+            min-width: 200px; 
+            padding: 8px;
+            border: 1px solid var(--border-primary);
+            border-radius: 4px;
+            font-size: 1em;
+            box-sizing: border-box;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
+        
+        /* ROW METADATA STYLING */
+        .row-metadata {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .row-metadata input[type="text"] {
+            width: calc(50% - 5px);
+            flex-grow: 0;
+            padding: 8px;
+            border: 1px solid var(--border-primary);
+            border-radius: 4px;
+            font-size: 0.9em;
+            box-sizing: border-box;
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        /* Main container styling */
+        .grid-container {
+            max-width: 1200px; 
+            margin: 20px auto; 
+            padding: 15px;
+            border: 2px solid var(--border-accent);
+            background-color: var(--bg-secondary);
+            border-radius: 8px;
+        }
+
+        /* CONTAINER FOR 5 IMAGES IN A ROW */
+        .image-row-wrapper {
+            display: grid; 
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px; 
+            margin-bottom: 20px;
+        }
+
+        /* Style for the individual items (The Cells) */
+        .grid-item {
+            background-color: var(--accent-blue-bg);
+            border: 3px solid transparent; 
+            border-radius: 4px;
+            overflow: hidden; 
+            position: relative;
+            cursor: pointer; 
+            transition: border-color 0.2s, background-color 0.2s; 
+            aspect-ratio: 1 / 1; 
+        }
+        
+        /* Style for the actual image */
+        .grid-item img {
+            width: 100%;
+            height: 100%;
+            padding: 10px;
+            object-fit: contain; 
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        /* Checkmark Styling */
+        .checkmark {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 24px;
+            height: 24px;
+            background-color: var(--accent-green);
+            color: white;
+            border-radius: 50%;
+            display: none; 
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            line-height: 1;
+            z-index: 10;
+            font-weight: bold;
+        }
+        
+        /* VISUAL FEEDBACK: Style when the item is selected */
+        .grid-item.selected {
+            border-color: var(--accent-green);
+            background-color: var(--accent-green-bg);
+        }
+
+        /* SHOW the checkmark when the parent item is selected */
+        .grid-item.selected .checkmark {
+            display: flex; 
+        }
+
+        /* --- LOADING OVERLAY STYLING --- */
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            color: var(--text-primary);
+            font-size: 1.5em;
+            flex-direction: column;
+        }
+
+        #loading-overlay > div { /* Targets #import-spinner and #export-spinner */
+            display: none; /* Hide both by default */
+            text-align: center;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid var(--border-primary);
+            border-top-color: var(--border-accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px auto;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
   <body>
-    <button id="my-button">Invoke Command</button>
+    
+    <div id="welcome-screen">
+        <h2>Painting Pack Creator</h2>
+        <p>Import images to begin using <strong>File > Open Image(s)</strong></p>
+    </div>
+
+    <div id="main-content" style="display: none;">
+        <div id="global-metadata">
+            <input type="text" id="globalPackName" placeholder="Pack Name">
+            <input type="text" id="globalVersion" placeholder="Version (e.g., 1.0.0)">
+            <input type="text" id="globalId" placeholder="Unique ID (Auto-generated)">
+            <input type="text" id="globalDescription" placeholder="Pack Description">
+        </div>
+
+        <div class="grid-container" id="dynamicGrid">
+        </div>
+    </div>
+
+    <div id="loading-overlay" style="display: none;">
+        <div id="import-spinner">
+            <div class="spinner"></div>
+            <p>Processing Images...</p>
+        </div>
+        <div id="export-spinner">
+            <div class="spinner"></div>
+            <p>Exporting Pack...</p>
+        </div>
+    </div>
 
     <script>
       // 1. Get the invoke function from the global Tauri object
       const invoke = window.__TAURI__.core.invoke;
       const listen = window.__TAURI__.event.listen;
+      let base64Images;
 
-      listen('menu:open_and_process_images', (event) => {
-        invoke('open_and_process_images');
-      });
+      // --- NEW: Loading Overlay Elements and Functions ---
+      const loadingOverlay = document.getElementById('loading-overlay');
+      const importSpinner = document.getElementById('import-spinner');
+      const exportSpinner = document.getElementById('export-spinner');
 
-      listen('menu:export_pack', (event) => {
-        invoke('export_pack');
-      });
-
-      // 2. Create a function to call the command
-      async function callCustomCommand() {
-        // 3. Use the invoke function to call your Rust command
-        await invoke('my_custom_command');
+      function showLoading(type) {
+          if (type === 'import') {
+              importSpinner.style.display = 'block';
+              exportSpinner.style.display = 'none';
+          } else if (type === 'export') {
+              importSpinner.style.display = 'none';
+              exportSpinner.style.display = 'block';
+          }
+          loadingOverlay.style.display = 'flex';
       }
 
-      // 4. Add an event listener to your button
-      document.getElementById('my-button').addEventListener('click', callCustomCommand);
+      function hideLoading() {
+          loadingOverlay.style.display = 'none';
+      }
+
+      function displayImagesInGrid(images) {
+        const gridContainer = document.getElementById('dynamicGrid');
+        gridContainer.innerHTML = '';
+
+        for (let i = 0; i < images.length; i += 5) {
+          const groupIndex = i / 5;
+
+          const metadataDiv = document.createElement('div');
+          metadataDiv.className = 'row-metadata';
+
+          const nameInput = document.createElement('input');
+          nameInput.type = 'text';
+          nameInput.placeholder = 'Image Name(s)';
+          
+          const artistInput = document.createElement('input');
+          artistInput.type = 'text';
+          artistInput.placeholder = 'Artist Name';
+
+          metadataDiv.appendChild(nameInput);
+          metadataDiv.appendChild(artistInput);
+          gridContainer.appendChild(metadataDiv);
+
+          const imageRowWrapper = document.createElement('div');
+          imageRowWrapper.className = 'image-row-wrapper';
+          const imagesInRow = images.slice(i, i + 5);
+
+          imagesInRow.forEach((base64String, cropIndex) => {
+            const gridItem = document.createElement('div');
+            gridItem.className = 'grid-item selected';
+
+            const img = document.createElement('img');
+            img.src = base64String;
+
+            const checkmark = document.createElement('div');
+            checkmark.className = 'checkmark';
+            checkmark.innerText = '✓';
+            
+            gridItem.addEventListener('click', async () => {
+              gridItem.classList.toggle('selected');
+              const isSelected = gridItem.classList.contains('selected');
+              try {
+                await invoke('set_selected', { 
+                  groupIndex: groupIndex, 
+                  cropIndex: cropIndex, 
+                  selected: isSelected 
+                });
+              } catch (error) {
+                console.error("Failed to update selection state:", error);
+              }
+            });
+
+            gridItem.appendChild(img);
+            gridItem.appendChild(checkmark);
+            imageRowWrapper.appendChild(gridItem);
+          });
+
+          gridContainer.appendChild(imageRowWrapper);
+        }
+      }
+
+      function showMainContent() {
+            const welcomeScreen = document.getElementById('welcome-screen');
+            const mainContent = document.getElementById('main-content');
+            welcomeScreen.style.display = 'none';
+            mainContent.style.display = 'block';
+      }
+
+      listen('menu:open_and_process_images', async (event) => {
+        showLoading('import');
+        try {
+            base64Images = await invoke('open_and_process_images');
+            showMainContent();
+            displayImagesInGrid(base64Images);
+        } catch (error) {
+            console.error("Failed to open and process images:", error);
+        } finally {
+            hideLoading();
+        }
+      });
+
+      listen('menu:export_pack', async (event) => {
+        showLoading('export');
+        try {
+          console.log("Starting export process...");
+
+          const packName = document.getElementById('globalPackName').value;
+          const version = document.getElementById('globalVersion').value;
+          const id = document.getElementById('globalId').value;
+          const description = document.getElementById('globalDescription').value;
+
+          await invoke('update_pack_metadata', { packName, version, id, description });
+          console.log("Global pack metadata updated.");
+
+          const rowMetadataDivs = document.querySelectorAll('.row-metadata');
+          const updatePromises = Array.from(rowMetadataDivs).map((rowDiv, index) => {
+            const inputs = rowDiv.querySelectorAll('input[type="text"]');
+            const name = inputs[0].value;
+            const artist = inputs[1].value;
+            return invoke('update_row_metadata', { groupIndex: index, name, artist });
+          });
+
+          await Promise.all(updatePromises);
+          console.log("All row metadata updated.");
+
+          await invoke('export_pack');
+          console.log("Export command issued.");
+        } catch (error) {
+          console.error("An error occurred during the export process:", error);
+        } finally {
+            hideLoading();
+        }
+      });
     </script>
   </body>
 </html>
