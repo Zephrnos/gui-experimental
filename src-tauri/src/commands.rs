@@ -1,10 +1,19 @@
 use std::sync::Mutex;
-use tauri::State;
+use tauri::{State, Window, Emitter};
 use crate::{
     app_state::{AppState, SourceImageGroup}, 
     core::{cropper, exporter},
-    models::{pack_list::PackList}
+    models::{image_data::ImageData, image_size::ImageSize},
+    core::exporter::ExportItem,
 };
+
+// Payload for the event emitted after each image is processed.
+#[derive(Clone, serde::Serialize)]
+struct ImageProcessedPayload {
+    previews: Vec<String>,
+    name: String,
+    artist: String,
+}
 
 /*
 Test Command
@@ -15,19 +24,12 @@ pub fn my_custom_command() {
 }
 
 /*
-
-First command run when window is opened. 
-
-Init:
- - Open a file explorer window
- - Get filepaths of images we want to work with
- - Returns strings of the filepaths
-After:
- - Pass filepaths along to a preview generator [something along the likes of generate_previews()]
-
+Opens images, generates transient crops, and emits an event for each image
+with its Base64 previews. This avoids accumulating all previews in memory
+and sending a single large payload.
 */
 #[tauri::command]
-pub async fn open_and_process_images(state: State<'_, Mutex<AppState>>) -> Result<Vec<String>, String> {
+pub async fn open_and_process_images(state: State<'_, Mutex<AppState>>, window: Window) -> Result<(), String> {
     println!("[COMMAND] open_and_process_images command received commands.rs");
     let files = rfd::AsyncFileDialog::new()
         .set_title("Choose Images...")
@@ -35,38 +37,70 @@ pub async fn open_and_process_images(state: State<'_, Mutex<AppState>>) -> Resul
         .pick_files()
         .await;
     println!("[COMMAND] open_and_process_images images received commands.rs");
+
     if let Some(file_handles) = files {
         let paths: Vec<String> = file_handles.into_iter().map(|h| h.path().to_string_lossy().to_string()).collect();
-        let mut all_previews = Vec::new();
+        
+        // The AppState is locked once outside the loop for efficiency.
         let mut app_state = state.lock().unwrap();
 
         for path_str in paths {
-            let image_data_vec = cropper::crop_preview(&path_str);
-            println!("[COMMAND] open_and_process_images images cropped commands.rs");
-            let previews = exporter::generate_base64_previews(&image_data_vec);
-            all_previews.extend(previews);
-            println!("[COMMAND] open_and_process_images images converted base64 commands.rs");
-            
-            // Create a single group for this source image and its crops
-            let group = SourceImageGroup {
-                name: std::path::Path::new(&path_str).file_stem().unwrap_or_default().to_string_lossy().to_string(),
-                artist: String::from("Artist Name"),
-                crops: image_data_vec,
+            // 1. Generate cropped images in memory (transiently).
+            let cropped_images = match cropper::generate_cropped_images(&path_str) {
+                Ok(images) => images,
+                Err(e) => {
+                    eprintln!("Failed to crop image {}: {}", path_str, e);
+                    continue; // Skip this image if it fails to open/crop
+                }
             };
+            println!("[COMMAND] open_and_process_images image cropped commands.rs");
+            
+            // 2. Create Base64 previews from the transient images.
+            let previews = exporter::generate_base64_previews(&cropped_images);
+            println!("[COMMAND] open_and_process_images image converted base64 commands.rs");
+            
+            // 3. Create metadata-only ImageData structs for the app state.
+            let crop_metadata: Vec<ImageData> = ImageSize::iter()
+                .map(|size_variant| ImageData::new(*size_variant))
+                .collect();
+            
+            let name = std::path::Path::new(&path_str).file_stem().unwrap_or_default().to_string_lossy().to_string();
+            let artist = String::from("Artist Name");
 
-            // Add the entire group to the state
+            // 4. EMIT an event with the previews and initial metadata for THIS image group.
+            // The frontend will listen for this and build the UI row by row.
+            window.emit("image-processed", ImageProcessedPayload {
+                previews: previews.clone(),
+                name: name.clone(),
+                artist: artist.clone(),
+            }).unwrap();
+
+            // 5. Create the group with the source path and metadata, then store in state.
+            let group = SourceImageGroup {
+                source_path: path_str.clone(),
+                name,
+                artist,
+                crops: crop_metadata,
+            };
             app_state.image_groups.push(group);
+
+            // `cropped_images` is dropped here, freeing its memory.
         }
-        Ok(all_previews)
+        
+        // After the loop, emit a final event to signal completion.
+        window.emit("processing-finished", ()).unwrap();
+
     } else {
-        Ok(Vec::new())
+        // If the user cancelled the dialog, we still emit the finished event
+        // to ensure the frontend doesn't get stuck in a loading state.
+        window.emit("processing-finished", ()).unwrap();
     }
+    
+    Ok(())
 }
 
 /*
-
 Ran whenever a photo in the GUI is deselected. Also allow for updating the photo as selected.
-
 */
 #[tauri::command]
 pub fn set_selected(group_index: usize, crop_index: usize, selected: bool, state: State<'_, Mutex<AppState>>) {
@@ -118,14 +152,8 @@ pub fn update_pack_metadata(
 }
 
 /*
-
-Final command called when window is opened
-
-Init:
- - Takes in an export path
-After: 
- - Writes all the images to the export directory with given data, and closes the program
-
+Collects all metadata and source paths, then passes them to the exporter,
+which re-opens and re-crops images on-demand.
 */
 #[tauri::command]
 pub async fn export_pack(state: State<'_, Mutex<AppState>>) -> Result<(), String> {
@@ -142,31 +170,37 @@ pub async fn export_pack(state: State<'_, Mutex<AppState>>) -> Result<(), String
         let export_path = folder_handle.path().to_string_lossy().to_string();
         let app_state = state.lock().unwrap();
 
-        // 3. Create the final list for export, starting with global metadata
-        let mut final_list = PackList::new(
-            app_state.pack_metadata.pack_name.clone(),
-            app_state.pack_metadata.version.clone(),
-            app_state.pack_metadata.id.clone(),
-            app_state.pack_metadata.description.clone(),
-        );
-
-        // 4. Iterate through the groups and add only the selected crops
+        // 3. Create a list of items to be exported, including source paths for re-cropping.
+        let mut items_to_export: Vec<ExportItem> = Vec::new();
         for group in &app_state.image_groups {
             for crop in &group.crops {
                 if crop.selected { // Check if the crop is selected
-                    let mut export_crop = crop.clone();
+                    let mut export_crop_data = crop.clone();
                     // Assign the shared metadata from the group to the individual crop
-                    export_crop.name = Some(group.name.clone());
-                    export_crop.artist = Some(group.artist.clone());
-                    export_crop.id = Some(group.name.clone());
-                    export_crop.filename = Some(group.name.clone());
-                    final_list.add_painting(export_crop);
+                    export_crop_data.name = Some(group.name.clone());
+                    export_crop_data.artist = Some(group.artist.clone());
+                    export_crop_data.id = Some(group.name.clone());
+                    export_crop_data.filename = Some(group.name.clone());
+                    
+                    items_to_export.push(ExportItem {
+                        source_path: group.source_path.clone(),
+                        data: export_crop_data,
+                    });
                 }
             }
         }
 
-        // 5. Call the exporter with the fully prepared list and the chosen path
-        exporter::export(final_list, &export_path);
+        // 4. Call the exporter with the raw metadata and the list of items to process.
+        // This module no longer needs to know about the private `Painting` struct.
+        let pack_meta = &app_state.pack_metadata;
+        exporter::export(
+            pack_meta.pack_name.clone(),
+            pack_meta.version.clone(),
+            pack_meta.id.clone(),
+            pack_meta.description.clone(),
+            items_to_export,
+            &export_path,
+        );
     }
     
     // If the user cancels the dialog, the function simply finishes without error.

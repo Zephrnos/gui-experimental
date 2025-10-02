@@ -272,65 +272,63 @@
           loadingOverlay.style.display = 'none';
       }
 
-      function displayImagesInGrid(images) {
-        const gridContainer = document.getElementById('dynamicGrid');
-        gridContainer.innerHTML = '';
+      function appendImageRowToGrid(payload) {
+            const gridContainer = document.getElementById('dynamicGrid');
+            // The group index is the number of rows already present.
+            const groupIndex = gridContainer.querySelectorAll('.image-row-wrapper').length;
 
-        for (let i = 0; i < images.length; i += 5) {
-          const groupIndex = i / 5;
+            const metadataDiv = document.createElement('div');
+            metadataDiv.className = 'row-metadata';
 
-          const metadataDiv = document.createElement('div');
-          metadataDiv.className = 'row-metadata';
+            const nameInput = document.createElement('input');
+            nameInput.type = 'text';
+            nameInput.placeholder = 'Image Name(s)';
+            nameInput.value = payload.name; // Pre-fill from payload
 
-          const nameInput = document.createElement('input');
-          nameInput.type = 'text';
-          nameInput.placeholder = 'Image Name(s)';
-          
-          const artistInput = document.createElement('input');
-          artistInput.type = 'text';
-          artistInput.placeholder = 'Artist Name';
+            const artistInput = document.createElement('input');
+            artistInput.type = 'text';
+            artistInput.placeholder = 'Artist Name';
+            artistInput.value = payload.artist; // Pre-fill from payload
 
-          metadataDiv.appendChild(nameInput);
-          metadataDiv.appendChild(artistInput);
-          gridContainer.appendChild(metadataDiv);
+            metadataDiv.appendChild(nameInput);
+            metadataDiv.appendChild(artistInput);
+            gridContainer.appendChild(metadataDiv);
 
-          const imageRowWrapper = document.createElement('div');
-          imageRowWrapper.className = 'image-row-wrapper';
-          const imagesInRow = images.slice(i, i + 5);
-
-          imagesInRow.forEach((base64String, cropIndex) => {
-            const gridItem = document.createElement('div');
-            gridItem.className = 'grid-item selected';
-
-            const img = document.createElement('img');
-            img.src = base64String;
-
-            const checkmark = document.createElement('div');
-            checkmark.className = 'checkmark';
-            checkmark.innerText = '✓';
+            const imageRowWrapper = document.createElement('div');
+            imageRowWrapper.className = 'image-row-wrapper';
             
-            gridItem.addEventListener('click', async () => {
-              gridItem.classList.toggle('selected');
-              const isSelected = gridItem.classList.contains('selected');
-              try {
-                await invoke('set_selected', { 
-                  groupIndex: groupIndex, 
-                  cropIndex: cropIndex, 
-                  selected: isSelected 
+            payload.previews.forEach((base64String, cropIndex) => {
+                const gridItem = document.createElement('div');
+                gridItem.className = 'grid-item selected';
+
+                const img = document.createElement('img');
+                img.src = base64String;
+
+                const checkmark = document.createElement('div');
+                checkmark.className = 'checkmark';
+                checkmark.innerText = '✓';
+                
+                gridItem.addEventListener('click', async () => {
+                    gridItem.classList.toggle('selected');
+                    const isSelected = gridItem.classList.contains('selected');
+                    try {
+                        await invoke('set_selected', { 
+                            groupIndex: groupIndex, 
+                            cropIndex: cropIndex, 
+                            selected: isSelected 
+                        });
+                    } catch (error) {
+                        console.error("Failed to update selection state:", error);
+                    }
                 });
-              } catch (error) {
-                console.error("Failed to update selection state:", error);
-              }
+
+                gridItem.appendChild(img);
+                gridItem.appendChild(checkmark);
+                imageRowWrapper.appendChild(gridItem);
             });
 
-            gridItem.appendChild(img);
-            gridItem.appendChild(checkmark);
-            imageRowWrapper.appendChild(gridItem);
-          });
-
-          gridContainer.appendChild(imageRowWrapper);
+            gridContainer.appendChild(imageRowWrapper);
         }
-      }
 
       function showMainContent() {
             const welcomeScreen = document.getElementById('welcome-screen');
@@ -339,18 +337,45 @@
             mainContent.style.display = 'block';
       }
 
-      listen('menu:open_and_process_images', async (event) => {
-        showLoading('import');
-        try {
-            base64Images = await invoke('open_and_process_images');
+      let unlistenImageProcessed = null;
+        let unlistenProcessingFinished = null;
+
+        async function setupImageProcessingListeners() {
+            // Unsubscribe from previous listeners if they exist to prevent duplicates
+            if (unlistenImageProcessed) unlistenImageProcessed();
+            if (unlistenProcessingFinished) unlistenProcessingFinished();
+
+            const gridContainer = document.getElementById('dynamicGrid');
+            gridContainer.innerHTML = ''; // Clear previous images before starting
             showMainContent();
-            displayImagesInGrid(base64Images);
-        } catch (error) {
-            console.error("Failed to open and process images:", error);
-        } finally {
-            hideLoading();
+            showLoading('import');
+
+            // Listen for the event that contains a single row of image data
+            unlistenImageProcessed = await listen('image-processed', (event) => {
+                appendImageRowToGrid(event.payload);
+            });
+
+            // Listen for the final event that tells us everything is done
+            unlistenProcessingFinished = await listen('processing-finished', (event) => {
+                hideLoading();
+                // Unsubscribe after finishing to prevent memory leaks
+                if (unlistenImageProcessed) unlistenImageProcessed();
+                if (unlistenProcessingFinished) unlistenProcessingFinished();
+            });
+
+            // Now, trigger the backend process. This command will now return instantly.
+            try {
+                await invoke('open_and_process_images');
+            } catch (error) {
+                console.error("Failed to start image processing:", error);
+                hideLoading(); // Also hide loading spinner on an invocation error
+            }
         }
-      });
+
+        listen('menu:open_and_process_images', (event) => {
+            setupImageProcessingListeners();
+        });
+
 
       listen('menu:export_pack', async (event) => {
         showLoading('export');

@@ -1,10 +1,8 @@
-use crate::models::{image_data::ImageData, image_size::ImageSize};
-use image::{open, GenericImageView};
+use crate::models::image_size::ImageSize;
+use image::{open, GenericImageView, DynamicImage};
 
 /*
-
 Used as an intermediary function to get proper crop dimensions of a given image. No public use.
-
 */
 fn calculate_crop_dimensions(image_dims: (u32, u32), target_size: (u32, u32)) -> (u32, u32, u32, u32) {
     let (width, height) = image_dims;
@@ -30,38 +28,44 @@ fn calculate_crop_dimensions(image_dims: (u32, u32), target_size: (u32, u32)) ->
     (width_start, height_start, crop_width, crop_height)
 }
 
-/* 
-
-Returns a Vec<ImageData> so we can attack it to a PaintingList<T>, where;
-
-PaintingList<ImageData> 
-
-has a Vec<ImageData> of images to process and draw previews from
-
+/*
+Generates a vector of all 5 cropped image variants from a single source file path.
+This is used to create transient images for Base64 preview generation.
+These images are NOT stored in the application state to conserve memory.
 */
-pub fn crop_preview(path: &str) -> Vec<ImageData> {
-
-    let mut previews: Vec<ImageData> = Vec::new();
-    let img = open(path).expect("This was not intended to fail");
+pub fn generate_cropped_images(path: &str) -> Result<Vec<DynamicImage>, image::ImageError> {
+    let mut cropped_images: Vec<DynamicImage> = Vec::new();
+    let img = open(path)?;
     let img_dims = img.dimensions();
-
 
     for size_variant in ImageSize::iter() {
         let target_size = size_variant.get_size()[0];
-        let (width_start, height_start, crop_width, crop_height) = 
+        let (width_start, height_start, crop_width, crop_height) =
             calculate_crop_dimensions(img_dims, target_size);
-        
+
         let crop_view = img.view(width_start, height_start, crop_width, crop_height);
-        let crop_preview = image::DynamicImage::ImageRgba8(crop_view.to_image());
-        
-        let new_image_data = ImageData::new(crop_preview, *size_variant);
-        previews.push(new_image_data);
+        let crop_preview = DynamicImage::ImageRgba8(crop_view.to_image());
 
+        cropped_images.push(crop_preview);
     }
-
-    previews
-
+    Ok(cropped_images)
 }
 
+/*
+Generates a single cropped image variant from a source file path.
+This is used during the final export process to re-generate images on-demand.
+*/
+pub fn crop_single_image(
+    path: &str,
+    image_size: &ImageSize,
+) -> Result<DynamicImage, image::ImageError> {
+    let img = open(path)?;
+    let img_dims = img.dimensions();
+    let target_size = image_size.get_size()[0];
 
+    let (width_start, height_start, crop_width, crop_height) =
+        calculate_crop_dimensions(img_dims, target_size);
 
+    let crop_view = img.view(width_start, height_start, crop_width, crop_height);
+    Ok(DynamicImage::ImageRgba8(crop_view.to_image()))
+}
