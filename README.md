@@ -1,2 +1,2 @@
-# gui-experimental
-Exerimenting with making a GUI for one of my previous projects
+# MCPPM
+Rust and Tauri based painting pack maker for Minecraft uses native webview within Tauri.
